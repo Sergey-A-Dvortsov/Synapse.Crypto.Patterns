@@ -19,13 +19,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Libs\bybit.net.api-main\Src\Common\bybit.net.api.csproj" />
+    <ProjectReference Include="..\..\Synapse\Synapse.General\Synapse.General.csproj" />
     <ProjectReference Include="..\Synapse.Crypto.Bybit\Synapse.Crypto.Bybit.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Synapse.General">
-      <HintPath>..\..\Synapse\Synapse.General\bin\Debug\net8.0-windows\Synapse.General.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\Synapse.Crypto.Trading\Synapse.Crypto.Trading.csproj" />
   </ItemGroup>
 
 </Project>
