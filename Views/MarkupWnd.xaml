@@ -1,0 +1,111 @@
+﻿<Window x:Class="Synapse.Crypto.Patterns.MarkupWnd"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:xb="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:sp="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:local="clr-namespace:Synapse.Crypto.Patterns"
+        mc:Ignorable="d"
+        Title="Разметка" Height="450" Width="800">
+    
+    <xb:Interaction.Triggers>
+        <xb:EventTrigger EventName="Loaded">
+            <xb:CallMethodAction MethodName="OnLoaded" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+        <xb:EventTrigger EventName="Unloaded">
+            <xb:CallMethodAction MethodName="OnUnloaded" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+        <xb:EventTrigger EventName="Closing">
+            <xb:CallMethodAction MethodName="OnClosing" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+
+    </xb:Interaction.Triggers>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid x:Name="chartGrid" HorizontalAlignment="Stretch" Cursor="">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <ToolBar>
+                <!--<ToggleButton Content="DHL" IsChecked="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=HighLowLine}" 
+                            ToolTip="Максимум/минимум предыдущего дня"/>-->
+            </ToolBar>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <local:CandleView VerticalAlignment="Center" DataContext="{Binding CandleViewModel}"/>
+            </StackPanel>
+
+            <!--<ContentControl Grid.Row="2" Content="{Binding Plot, Mode=OneTime}"/>-->
+            <sp:WpfPlot Grid.Row="2" Name="Plot"/>
+
+        </Grid>
+        <GridSplitter Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Center" Width="5" Background="Gray"/>
+        <Grid x:Name="infoGrid" Grid.Column="2" HorizontalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="4*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <xctk:PropertyGrid x:Name="markupPropGrid"
+                  Grid.Row="0"
+                  ShowAdvancedOptions="False"
+                  ShowSearchBox="False"
+                  ShowTitle="True"
+                  ShowSortOptions="False"
+                  IsMiscCategoryLabelHidden="True"
+                  SelectedObject="{Binding LastMarkup}" >
+                <xctk:PropertyGrid.EditorDefinitions>
+                    <xctk:EditorTemplateDefinition >
+                        <xctk:EditorTemplateDefinition.TargetProperties>
+                            <sys:String>Time</sys:String>
+                        </xctk:EditorTemplateDefinition.TargetProperties>
+                        <xctk:EditorTemplateDefinition.EditingTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Value, StringFormat={}{0:dd.MM.yy HH:mm}}" Foreground="Gray" />
+                            </DataTemplate>
+                        </xctk:EditorTemplateDefinition.EditingTemplate>
+                    </xctk:EditorTemplateDefinition>
+
+                </xctk:PropertyGrid.EditorDefinitions>
+            </xctk:PropertyGrid>
+            <GridSplitter Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Width="5" Background="Gray"/>
+            <DataGrid 
+         x:Name="ScreenGrid"
+         Grid.Row="2"
+         ItemsSource="{Binding ItemsView}" 
+         SelectedItem="{Binding SelectedScreenItem}" 
+         AutoGenerateColumns="False"
+         IsReadOnly="True" 
+         RowHeaderWidth="20" 
+         CanUserResizeRows="False" 
+         CanUserResizeColumns="True"
+         CanUserAddRows="False" 
+         CanUserDeleteRows="False" 
+         ScrollViewer.VerticalScrollBarVisibility="Auto"
+         ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Time" Binding="{Binding Path=Time, StringFormat={}{0:dd.MM.yy HH:mm}}" Width="Auto" />
+                    <DataGridTextColumn Header="Pattern" Binding="{Binding Path=Pattern}" />
+                    <DataGridTextColumn Header="Direction" Binding="{Binding Path=Direction}" Width="Auto" />
+                    <!--<DataGridTextColumn Header="" Width="*"/>-->
+                </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"  >
+                <Button Content="Save" Width="52" Margin="5" Command="{Binding SaveMarkupCommand}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
+
+
+<!--<ContentControl Content="{Binding PlotControl, Mode=OneTime}"/>-->

@@ -1,0 +1,46 @@
+﻿<Window x:Class="Synapse.Crypto.Patterns.UniTableWnd"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:xb="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:local="clr-namespace:Synapse.Crypto.Patterns"
+        mc:Ignorable="d"
+        Title="Универсальная таблица" Height="450" Width="800">
+
+    <xb:Interaction.Triggers>
+        <xb:EventTrigger EventName="Loaded">
+            <xb:CallMethodAction MethodName="OnLoaded" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+        <xb:EventTrigger EventName="Unloaded">
+            <xb:CallMethodAction MethodName="OnUnloaded" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+        <xb:EventTrigger EventName="Closing">
+            <xb:CallMethodAction MethodName="OnClosing" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+    </xb:Interaction.Triggers>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <DataGrid Grid.Row="1"
+            x:Name="ItemsGrid"
+             ItemsSource="{Binding ItemsView}" 
+             SelectedItem="{Binding SelectedItem}" 
+             AutoGenerateColumns="True"
+             IsReadOnly="True" 
+             RowHeaderWidth="20" 
+             CanUserResizeRows="False" 
+             CanUserResizeColumns="True"
+             CanUserAddRows="False" 
+             CanUserDeleteRows="False" 
+             ScrollViewer.HorizontalScrollBarVisibility="Auto">
+            <DataGrid.Columns>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>

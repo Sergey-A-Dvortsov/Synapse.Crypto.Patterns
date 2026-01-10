@@ -1,0 +1,9 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Synapse.Crypto.Scanner.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="CMCKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)">3d60c087-c1bc-487e-8deb-c602bf4375d9</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

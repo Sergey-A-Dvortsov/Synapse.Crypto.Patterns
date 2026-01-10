@@ -1,0 +1,408 @@
+﻿<UserControl x:Class="Synapse.Crypto.Patterns.ScanTableView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:xb="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:bb="clr-namespace:Synapse.Crypto.Bybit;assembly=Synapse.Crypto.Bybit"
+             xmlns:local="clr-namespace:Synapse.Crypto.Patterns"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+    <xb:Interaction.Triggers>
+        <xb:EventTrigger EventName="Loaded">
+            <xb:CallMethodAction MethodName="OnLoaded" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+        <xb:EventTrigger EventName="Unloaded">
+            <xb:CallMethodAction MethodName="OnUnloaded" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+    </xb:Interaction.Triggers>
+    
+    <UserControl.Resources>
+
+        <ObjectDataProvider x:Key="timeFrames" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+                <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="bb:TimeFrames"/>
+                </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+        
+        <ObjectDataProvider x:Key="breakStyles" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="local:BreakStyles"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <SolidColorBrush Color="Bisque" x:Key="BaseVolumeColor"/>
+        <SolidColorBrush Color="Honeydew" x:Key="QuoteVolumeColor"/>
+        <SolidColorBrush Color="Cornsilk" x:Key="TradesCountColor"/>
+        <SolidColorBrush Color="LightSalmon" x:Key="ActiveIndexColor"/>
+        <SolidColorBrush Color="LightGoldenrodYellow"  x:Key="PriceChangeColor"/>
+
+        <local:SignColorConverter x:Key="SignColorConv"/>
+        <local:BoolVisibilityConverter x:Key="BoolVisibilityConv" />
+
+        <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}" />
+
+        <Style x:Key="RedGreenCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource RightGridCellStyle}" >
+            <Setter Property="Background" Value="Green"/>
+        </Style>
+
+        <Style x:Key="BaseVolumeCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource RightGridCellStyle}" >
+            <Setter Property="Background" Value="LightSeaGreen"/>
+            <Setter Property="Width" Value="70"/>
+        </Style>
+
+        <Style x:Key="QuoteVolumeCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource RightGridCellStyle}" >
+            <Setter Property="Background" Value="LightGoldenrodYellow"/>
+            <Setter Property="Width" Value="70"/>
+        </Style>
+        
+        <Style x:Key="TradesCountCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource RightGridCellStyle}" >
+            <Setter Property="Background" Value="LightSkyBlue"/>
+            <Setter Property="Width" Value="70"/>
+        </Style>
+
+        <Style x:Key="ActiveIndexCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource RightGridCellStyle}" >
+            <Setter Property="Background" Value="LightCoral"/>
+            <Setter Property="Width" Value="70"/>
+        </Style>
+
+        <Style x:Key="PriceChangeCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource RightGridCellStyle}" >
+            <Setter Property="Background" Value="LightSteelBlue"/>
+            <Setter Property="Width" Value="70"/>
+        </Style>
+
+        <DataTemplate x:Key="ColumnDateTemplate" >
+            <StackPanel Width="20" Height="30">
+                <Border Background="LightBlue" BorderBrush="Black" BorderThickness="1">
+                    <TextBlock Text="{Binding PublishDate, StringFormat={}{0:MMM}}" FontSize="8" HorizontalAlignment="Center" />
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="BaseVolCellDateTemplate" >
+            <Grid Background="Bisque" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <TextBlock Opacity="100" Text="{Binding StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+            </Grid>
+        </DataTemplate>
+        
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <ToolBar>
+            <TextBlock Text="Bars" Margin="10,2,2,2" FontSize="14" Foreground="Blue" />
+            <xctk:IntegerUpDown Margin="2" Width="50" Value="{Binding LoadedBars}" Minimum="48" />
+            <TextBlock Text="Time frame" Margin="10,2,2,2" FontSize="14" Foreground="Blue" />
+            <ComboBox Margin="2" Width="80" ItemsSource="{Binding Source={StaticResource timeFrames}}"
+                      SelectedItem="{Binding TimeFrame}"/>
+            <TextBlock Text="Breakdown style" Margin="10,2,2,2" FontSize="14" Foreground="Blue" />
+            <ComboBox Margin="2" Width="80" ItemsSource="{Binding Source={StaticResource breakStyles}}"
+                      SelectedItem="{Binding BreakStyle}"/>
+            <ToolBar>
+                <ToggleButton Content="DHL" IsChecked="{Binding HighLowLineShow}" 
+              ToolTip="Показывать на графиках максимум/минимум предыдущего дня"/>
+            </ToolBar>
+
+            <Separator Margin="10,2" />
+            
+            <Button Content="Show Volat" Margin="2" Command="{Binding ShowVolatilityCommand}"/>
+
+            <Separator Margin="10,2" />
+            <Button Content="Update" Margin="2" Command="{Binding ScreenUpdateCommand}"/>
+            <Separator Margin="10,2" />
+
+
+            <!--<BulletDecorator>
+                <BulletDecorator.Bullet>
+                    <CheckBox IsChecked="{Binding ShowHasPerpetualOnly}" />
+                </BulletDecorator.Bullet>
+                <TextBlock
+            TextWrapping="Wrap"
+            HorizontalAlignment="Left"
+            Foreground="Blue"
+            Margin="5,0,0,0">
+                perpetual only
+                </TextBlock>
+            </BulletDecorator>-->
+            
+        </ToolBar>
+        <ContentControl Grid.Row="1" Content="{StaticResource ProxyElement}" Visibility="Collapsed" />
+        <DataGrid 
+                x:Name="ScreenGrid"
+                Grid.Row="1"
+                ItemsSource="{Binding ItemsView}" 
+                SelectedItem="{Binding SelectedScreenItem}" 
+                AutoGenerateColumns="False"
+                IsReadOnly="True" 
+                RowHeaderWidth="20" 
+                CanUserResizeRows="False" 
+                CanUserResizeColumns="True"
+                CanUserAddRows="False" 
+                CanUserDeleteRows="False" 
+                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="График" Command="{Binding OpenChartCommand}" CommandParameter="{Binding SelectedScreenItem}"/>
+                    <Separator></Separator>
+                    <MenuItem Header="Симулятор торговли" Command="{Binding OpenSimulatorWndCommand}" CommandParameter="{Binding SelectedScreenItem}"/>
+                    <MenuItem Header="Пошаговый просмотр" Command="{Binding OpenStepWndCommand}" CommandParameter="{Binding SelectedScreenItem}"/>
+                    <MenuItem Header="Разметка..">
+                        <MenuItem Header="Candlestiks" Command="{Binding CandleMarkupCommand}" CommandParameter="{Binding SelectedScreenItem}"/>
+                        <MenuItem Header="Heiken Ashi" Command="{Binding HeikenAshiMarkupCommand}" CommandParameter="{Binding SelectedScreenItem}"/>
+                    </MenuItem>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+           <DataGrid.Columns>
+
+                <DataGridTextColumn Header="Symbol" Binding="{Binding Path=Symbol}" Width="80" />
+                <DataGridTextColumn Header="Rank" Binding="{Binding Path=Rank}" Width="50" />
+                <!--<DataGridTextColumn Header="Start" Binding="{Binding Path=Start, StringFormat={}{0:dd.MM.yy HH:mm}}" />-->
+               
+                <DataGridTextColumn Header="PrevHigh" Binding="{Binding Path=PrevDayHigh}" />
+                <DataGridTextColumn Header="PrevLow" Binding="{Binding Path=PrevDayLow}" />
+                <DataGridCheckBoxColumn Header="HighBreak" Binding="{Binding Path=IsHighBreakdown}" />
+                <DataGridTextColumn Header="HighBreakTime" Binding="{Binding Path=HighBreakTime, StringFormat={}{0:dd.MM.yy HH:mm}}" />
+                <DataGridCheckBoxColumn Header="HighRetest" Binding="{Binding Path=IsHighRetest}" />
+                <DataGridTextColumn Header="HighRetestTime" Binding="{Binding Path=HighRetestTime, StringFormat={}{0:dd.MM.yy HH:mm}}" />
+                <DataGridCheckBoxColumn Header="LowBreak" Binding="{Binding Path=IsLowBreakdown}" />
+                <DataGridTextColumn Header="LowBreakTime" Binding="{Binding Path=LowBreakTime, StringFormat={}{0:dd.MM.yy HH:mm}}" />
+                <DataGridCheckBoxColumn Header="LowRetest" Binding="{Binding Path=IsLowRetest}" />
+                <DataGridTextColumn Header="LowRetestTime" Binding="{Binding Path=LowRetestTime, StringFormat={}{0:dd.MM.yy HH:mm}}" />
+
+                <!--<DataGridTextColumn Header="FHLen" Binding="{Binding Path=FHLenth}" />
+                <DataGridTextColumn Header="FHRange" Binding="{Binding Path=FHRange}" />-->
+
+                <!--<DataGridTemplateColumn Header="Base-S-Vol" SortMemberPath="BaseVolumes[small]" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource BaseVolumeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=BaseVolumes[small], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>-->
+
+                <!--<DataGridTemplateColumn Header="Base-M-Vol" SortMemberPath="BaseVolumes[mid]" CanUserSort="True" 
+                                        Visibility="{Binding DataContext.ColumnVisibility[BaseVolumesMid], Source={StaticResource ProxyElement}, Converter={StaticResource BoolVisibilityConv}}"> 
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource BaseVolumeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=BaseVolumes[mid], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Base-L-Vol" SortMemberPath="BaseVolumes[large]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource BaseVolumeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=BaseVolumes[large], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Base-24-Vol" SortMemberPath="BaseVolumes[h24]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource BaseVolumeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=BaseVolumes[h24], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Quote-S-Vol" SortMemberPath="QuoteVolumes[small]" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource QuoteVolumeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=QuoteVolumes[small], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Quote-M-Vol" SortMemberPath="QuoteVolumes[mid]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource QuoteVolumeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=QuoteVolumes[mid], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Quote-L-Vol" SortMemberPath="QuoteVolumes[large]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource QuoteVolumeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=QuoteVolumes[large], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Quote-24-Vol" SortMemberPath="QuoteVolumes[h24]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource QuoteVolumeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=QuoteVolumes[h24], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Trd-S-Cnt" SortMemberPath="Trades[small]" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource TradesCountColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=Trades[small], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Trd-M-Cnt" SortMemberPath="Trades[mid]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource TradesCountColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=Trades[mid], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Trd-L-Cnt" SortMemberPath="Trades[large]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource  TradesCountColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=Trades[large], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Trd-24-Cnt" SortMemberPath="Trades[h24]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource TradesCountColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=Trades[h24], StringFormat={}{0:F0}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Z-trades" SortMemberPath="Z" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource TradesCountColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=Z, StringFormat={}{0:F2}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>-->
+
+                <!--<DataGridTemplateColumn Header="Active-S-Idx" SortMemberPath="ActiveIndexes[small]" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource ActiveIndexColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=ActiveIndexes[small], StringFormat={}{0:F2}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Active-M-Idx" SortMemberPath="ActiveIndexes[mid]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource ActiveIndexColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=ActiveIndexes[mid], StringFormat={}{0:F2}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Active-L-Idx" SortMemberPath="ActiveIndexes[large]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource ActiveIndexColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=ActiveIndexes[large], StringFormat={}{0:F2}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Active-24-Idx" SortMemberPath="ActiveIndexes[h24]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource ActiveIndexColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=ActiveIndexes[h24], StringFormat={}{0:F2}}" HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Price-S-Change" SortMemberPath="PriceChanges[small]" CanUserSort="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource PriceChangeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=PriceChanges[small], StringFormat={}{0:F2}}" 
+                                           Foreground="{Binding Path=PriceChanges[small], Converter={StaticResource SignColorConv} }" 
+                                           HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Price-M-Change" SortMemberPath="PriceChanges[mid]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource PriceChangeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=PriceChanges[mid], StringFormat={}{0:F2}}" 
+                                           Foreground="{Binding Path=PriceChanges[mid], Converter={StaticResource SignColorConv}}"
+                                           HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Price-L-Change" SortMemberPath="PriceChanges[large]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource PriceChangeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=PriceChanges[large], StringFormat={}{0:F2}}"
+                                           Foreground="{Binding Path=PriceChanges[large], Converter={StaticResource SignColorConv}}"
+                                           HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Price-24-Change" SortMemberPath="PriceChanges[h24]" CanUserSort="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="{StaticResource PriceChangeColor}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TextBlock Opacity="100" Text="{Binding Path=PriceChanges[h24], StringFormat={}{0:F2}}" 
+                                           Foreground="{Binding Path=PriceChanges[h24], Converter={StaticResource SignColorConv}}"
+                                           HorizontalAlignment="Stretch"  TextAlignment="Right" />
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>-->
+
+                <DataGridTextColumn Header="" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+
+    </Grid>
+</UserControl>
