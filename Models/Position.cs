@@ -11,26 +11,11 @@ using Synapse.Crypto.Trading;
 
 namespace Synapse.Crypto.Patterns
 {
-    /// <summary>
-    /// Направление позиции
-    /// </summary>
-    public enum PositionSides
-    {
-        LONG,
-        SHORT
-    }
 
-    /// <summary>
-    /// Состояние позиции
-    /// </summary>
-    public enum PositionStates
-    {
-        Open,
-        Close
-    }
 
+    // Copyright(c) [2026], [Sergey Dvortsov]
     /// <summary>
-    /// Позиция
+    /// A special class of position specific to the tasks of a given application
     /// </summary>
     public class Position : INotifyPropertyChanged
     {
@@ -75,7 +60,7 @@ namespace Synapse.Crypto.Patterns
 
         private PositionSides _side;
         /// <summary>
-        /// Направление позиции
+        /// The position direction
         /// </summary>
         public PositionSides Side
         {
@@ -89,7 +74,7 @@ namespace Synapse.Crypto.Patterns
 
         private PositionStates _state;
         /// <summary>
-        /// Состояние позиции
+        /// The position state
         /// </summary>
         public PositionStates State
         {
@@ -103,7 +88,7 @@ namespace Synapse.Crypto.Patterns
 
         private DateTime _openTime;
         /// <summary>
-        /// Время открытия позиции
+        /// The position opening time
         /// </summary>
         public DateTime OpenTime
         {
@@ -117,7 +102,7 @@ namespace Synapse.Crypto.Patterns
 
         private double _openPrice;
         /// <summary>
-        /// Цена открытия позиции
+        /// The position opening price
         /// </summary>
         public double OpenPrice
         {
@@ -131,7 +116,7 @@ namespace Synapse.Crypto.Patterns
 
         private double _openFee;
         /// <summary>
-        /// %
+        /// The exchange fee when opening a position (%).
         /// </summary>
         public double OpenFee
         {
@@ -145,7 +130,7 @@ namespace Synapse.Crypto.Patterns
 
         private DateTime _closeTime;
         /// <summary>
-        /// Время закрытия позиции
+        /// The position closing time
         /// </summary>
         public DateTime CloseTime
         {
@@ -159,7 +144,7 @@ namespace Synapse.Crypto.Patterns
 
         private DateTime _time;
         /// <summary>
-        /// Время закрытия позиции
+        /// The current time (open time of current candle)
         /// </summary>
         public DateTime Time
         {
@@ -174,7 +159,7 @@ namespace Synapse.Crypto.Patterns
 
         private double _closePrice;
         /// <summary>
-        /// Цена закрытия позиции
+        /// The position closing price
         /// </summary>
         public double ClosePrice
         {
@@ -188,7 +173,7 @@ namespace Synapse.Crypto.Patterns
 
         private double _closeFee;
         /// <summary>
-        /// %
+        /// The exchange fee when closing a position (%).
         /// </summary>
         public double CloseFee
         {
@@ -201,12 +186,12 @@ namespace Synapse.Crypto.Patterns
         }
 
         /// <summary>
-        /// Размер позиции, номинированный в базовом активе (монетах)
+        /// Position size denominated in the quote asset (USD)
         /// </summary>
         public double QuoteSize { private get; set; }
 
         /// <summary>
-        /// Размер позиции, номинированный в базовом активе (монетах)
+        /// Position size denominated in the base asset (coins)
         /// </summary>
         public double Size 
         { 
@@ -214,7 +199,7 @@ namespace Synapse.Crypto.Patterns
         }
 
         /// <summary>
-        /// Длительность позиции
+        /// The position duration
         /// </summary>
         public TimeSpan Duration
         {
@@ -222,7 +207,7 @@ namespace Synapse.Crypto.Patterns
         }
 
         /// <summary>
-        /// Прибыль/убыток закрытой позиции с учетом комиссии
+        /// Profit/loss of a closed position, taking into account commission
         /// </summary>
         public double PNL
         {
@@ -236,25 +221,36 @@ namespace Synapse.Crypto.Patterns
         }
 
         /// <summary>
-        /// Относительная прибыль/убыток позиции (%)
+        /// Relative profit/loss of position (%)
         /// </summary>
         public double PNLPer
         {
-            get
+            get { return Math.Round(100 * PNL / QuoteSize, 2); }
+        }
+
+        private CloseReasons _closeReason;
+        /// <summary>
+        /// Reason for closing the position
+        /// </summary>
+        public CloseReasons CloseReason
+        {
+            get => _closeReason;
+            set
             {
-                return Math.Round(100 * PNL / QuoteSize, 2);
+                _closeReason = value;
+                NotifyPropertyChanged();
             }
         }
 
         #endregion
 
         /// <summary>
-        /// Проверяет условия и закрывает позицию, если достигнуты уровни стопа или тейка
+        /// Checks conditions and closes the position if stop or take profit levels are reached
         /// </summary>
-        /// <param name="candle"></param>
-        /// <param name="sl"></param>
-        /// <param name="tp"></param>
-        /// <returns></returns>
+        /// <param name="candle">current candle</param>
+        /// <param name="sl">stop-loss trigger price</param>
+        /// <param name="tp">take-profit limit price</param>
+        /// <returns>true if stop or take profit levels are reached</returns>
         public bool IsClose(Candle candle, double sl, double tp, double fee)
         {
             if (State == PositionStates.Close) return true;
@@ -265,32 +261,36 @@ namespace Synapse.Crypto.Patterns
 
             if (Side == PositionSides.LONG)
             {
-                if (candle.High >= tp) // сработал тейк
+                if (candle.High >= tp) // take profit level are reached
                 {
                     State = PositionStates.Close;
                     CloseTime = candle.OpenTime;
                     ClosePrice = tp;
+                    CloseReason = CloseReasons.TakeProfit;
                 }
-                else if (candle.Low <= sl) // сработал стоп
+                else if (candle.Low <= sl) // stop loss level are reached
                 {
                     State = PositionStates.Close;
                     CloseTime = candle.OpenTime;
                     ClosePrice = sl;
+                    CloseReason = CloseReasons.StopLoss;
                 }
             }
             else
             {
-                if (candle.Low <= tp) // сработал тейк
+                if (candle.Low <= tp) // take profit level are reached
                 {
                     State = PositionStates.Close;
                     CloseTime = candle.OpenTime;
                     ClosePrice = tp;
+                    CloseReason = CloseReasons.TakeProfit;
                 }
-                else if (candle.High >= sl) // сработал стоп
+                else if (candle.High >= sl) // stop loss level are reached
                 {
                     State = PositionStates.Close;
                     CloseTime = candle.OpenTime;
                     ClosePrice = sl;
+                    CloseReason = CloseReasons.StopLoss;
                 }
             }
 
@@ -298,10 +298,12 @@ namespace Synapse.Crypto.Patterns
         }
 
         /// <summary>
-        /// Закрытие позиции по текущей свече
+        /// Forced closing of a position at the current candle
         /// </summary>
         /// <param name="candle">текущая свеча</param>
-        /// <returns></returns>
+        /// <returns>true if position state = Close</returns>
+        ///<remarks>A forced close occurs when the end of the training data is reached or
+        ///if the user closes the position independently for their own reasons.</remarks>
         public bool ForseClose(Candle candle, double fee)
         {
             Time = candle.OpenTime;
@@ -309,13 +311,14 @@ namespace Synapse.Crypto.Patterns
             State = PositionStates.Close;
             CloseTime = candle.OpenTime;
             ClosePrice = candle.Close;
+            CloseReason = CloseReasons.Force;
             return State == PositionStates.Close;
         }
 
         /// <summary>
-        /// Клонирует экземпляр позиции
+        /// Clones an instance of a position
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Position</returns>
         public Position Clone()
         {
             return new()

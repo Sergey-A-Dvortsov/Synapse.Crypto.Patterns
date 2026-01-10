@@ -16,7 +16,7 @@ using Synapse.Crypto.Trading;
 
 namespace Synapse.Crypto.Patterns
 {
-
+    // Copyright(c) [2026], [Sergey Dvortsov]
     public static class Helpers
     {
 

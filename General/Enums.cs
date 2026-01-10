@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+// Copyright(c) [2026], [Sergey Dvortsov]
 namespace Synapse.Crypto.Patterns
 {
     public enum CandleUpdateModes
@@ -22,7 +23,7 @@ namespace Synapse.Crypto.Patterns
     }
 
     /// <summary>
-    /// Тип инструмента
+    /// Instrument types
     /// </summary>
     public enum InstrTypes
     {
@@ -32,18 +33,21 @@ namespace Synapse.Crypto.Patterns
         PATTERN
     }
 
+    /// <summary>
+    /// The style in which the level was broken
+    /// </summary>
     public enum BreakStyles
     {
         /// <summary>
-        /// Уровень пробивает только тень
+        /// The level only breaks through the shadow
         /// </summary>
         shadow,
         /// <summary>
-        /// Уровень пробивает цена закрытия
+        /// The level breaks through the close price
         /// </summary>
         close,
         /// <summary>
-        /// Уровень пробивает все тело (т.е. цена закрытия и открытия должна уйти за уровень)
+        /// The level breaks through the entire body (i.e. the closing and opening prices must go beyond the level)
         /// </summary>
         body
     }
@@ -60,6 +64,9 @@ namespace Synapse.Crypto.Patterns
         downside
     }
 
+    /// <summary>
+    /// Chart types
+    /// </summary>
     public enum ChartTypes
     {
         Сandlesticks,
@@ -67,7 +74,7 @@ namespace Synapse.Crypto.Patterns
     }
 
     /// <summary>
-    /// Одиночная свечная формация
+    /// Single candlestick formation
     /// </summary>
     public enum CandlePatterns
     {
@@ -97,22 +104,6 @@ namespace Synapse.Crypto.Patterns
         Indefinably = 6
     }
 
-    //public enum HeikinAshiPatterns : CandlePatterns
-    //{
-    //    /// <summary>
-    //    /// Молот
-    //    /// </summary>
-    //    Hummer,
-    //    /// <summary>
-    //    /// Волчок
-    //    /// </summary>
-    //    SpinningTop,
-    //    /// <summary>
-    //    /// Додж
-    //    /// </summary>
-    //    Doji
-    //}
-
     /// <summary>
     /// Направление движения инструмента, после маркированного паттерна
     /// </summary>
@@ -132,7 +123,7 @@ namespace Synapse.Crypto.Patterns
     }
 
     /// <summary>
-    /// Торговые формации
+    /// Trading formations
     /// </summary>
     public enum TradeFormations
     {
@@ -153,6 +144,17 @@ namespace Synapse.Crypto.Patterns
         /// </summary>
         Undefined
     }
+
+    /// <summary>
+    /// Reasons for closing a position
+    /// </summary>
+    public enum CloseReasons
+    {
+        TakeProfit,
+        StopLoss,
+        Force
+    }
+
 
 }
 //Indefinably

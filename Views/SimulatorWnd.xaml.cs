@@ -19,7 +19,7 @@ namespace Synapse.Crypto.Patterns
     /// </summary>
     public partial class SimulatorWnd : Window
     {
-        public SimulatorWnd(ScreenItem item)
+        public SimulatorWnd(MasterTableItem item)
         {
             InitializeComponent();
             DataContext = new SimulatorViewModel(Plot, item);

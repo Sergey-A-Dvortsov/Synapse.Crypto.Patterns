@@ -26,12 +26,12 @@ namespace Synapse.Crypto.Patterns
             ScreenUpdateCommand = new DelegateCommand(OnScreenUpdate, CanScreenUpdate);
         }
 
-        public ICollectionView ItemsView => CollectionViewSource.GetDefaultView(root.ScreenItems);
+        public ICollectionView ItemsView => CollectionViewSource.GetDefaultView(root.MasterItems);
 
         #region properties
 
-        private ScreenItem _selectedScreenItem;
-        public ScreenItem SelectedScreenItem
+        private MasterTableItem _selectedScreenItem;
+        public MasterTableItem SelectedScreenItem
         {
             get { return _selectedScreenItem; }
             set
@@ -91,10 +91,10 @@ namespace Synapse.Crypto.Patterns
 
         public void OnLoaded(object sender, RoutedEventArgs e)
         {
-            root.ScreenUpdate += Root_ScreenUpdate;
+            root.MasterTableUpdate += Root_ScreenUpdate;
             ItemsView.Filter = o => 
             {
-                if (o is not ScreenItem item)
+                if (o is not MasterTableItem item)
                     return false;
 
                 return true;
@@ -103,7 +103,7 @@ namespace Synapse.Crypto.Patterns
 
         public void OnUnloaded(object sender, RoutedEventArgs e)
         {
-            root.ScreenUpdate -= Root_ScreenUpdate; ;
+            root.MasterTableUpdate -= Root_ScreenUpdate; ;
         }
 
         #region commands
@@ -112,7 +112,7 @@ namespace Synapse.Crypto.Patterns
 
         private void OnOpenChart(object obj)
         {
-            var item = obj as ScreenItem;
+            var item = obj as MasterTableItem;
             var wnd = new ChartWnd(item, HighLowLineShow);
             wnd.Show();
         }
@@ -126,7 +126,7 @@ namespace Synapse.Crypto.Patterns
 
         private void OnOpenSimulatorWnd(object obj)
         {
-            var item = obj as ScreenItem;
+            var item = obj as MasterTableItem;
             var wnd = new SimulatorWnd(item);
             wnd.Show();
         }
@@ -140,7 +140,7 @@ namespace Synapse.Crypto.Patterns
 
         private void OnOpenStepWnd(object obj)
         {
-            var item = obj as ScreenItem;
+            var item = obj as MasterTableItem;
             var wnd = new StepViewWnd(item);
             wnd.Show();
         }
@@ -154,7 +154,7 @@ namespace Synapse.Crypto.Patterns
 
         private void OnCandleMarkup(object obj)
         {
-            var item = obj as ScreenItem;
+            var item = obj as MasterTableItem;
             var wnd = new MarkupWnd(item);
             wnd.Show();
         }
@@ -168,7 +168,7 @@ namespace Synapse.Crypto.Patterns
 
         private void OnHeikenAshiMarkup(object obj)
         {
-            var item = obj as ScreenItem;
+            var item = obj as MasterTableItem;
             var wnd = new MarkupWnd(item);
             wnd.Show();
         }

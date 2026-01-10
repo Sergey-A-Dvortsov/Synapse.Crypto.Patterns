@@ -18,7 +18,7 @@ using Synapse.Crypto.Trading;
 
 namespace Synapse.Crypto.Patterns
 {
-
+    // Copyright(c) [2026], [Sergey Dvortsov]
     /// <summary>
     /// Information about the candles stored in the file storage a specific instrument.
     /// </summary>
@@ -215,11 +215,11 @@ namespace Synapse.Crypto.Patterns
 
         private readonly List<string> excludes = [ "USDC", "USDE", "USD1", "ETHBTC" ];
 
-        private readonly List<string> subscriptions = [];
+        private readonly List<string> subscriptions = []; // streaming exchanges data subscriptions
 
-        private List<CandleStorageInfo>? StorageInfo { get; set; }
+        //private List<CandleStorageInfo>? StorageInfo { get; set; }
 
-        private StorageManager storageManager;
+        private StorageManager storageManager; // to work with file storage
 
         private AppRoot()
         {
@@ -244,12 +244,12 @@ namespace Synapse.Crypto.Patterns
             return root;
         }
 
-        public Logger logger;
+        public Logger logger; // logging
 
         #region events
 
         /// <summary>
-        /// Событие нового сообщения, которое отображается в строке статуса
+        /// Message event that is displayed in the status bar
         /// </summary>
         public event Action<string> NewStatusMessage = delegate { };
 
@@ -259,13 +259,13 @@ namespace Synapse.Crypto.Patterns
         }
 
         /// <summary>
-        /// Событие обновления "главной" таблицы
+        /// The "master" table update event
         /// </summary>
-        public event Action ScreenUpdate = delegate { };
+        public event Action MasterTableUpdate = delegate { };
 
-        private void OnScreenUpdate()
+        private void OnMasterTableUpdate()
         {
-            ScreenUpdate?.Invoke();
+            MasterTableUpdate?.Invoke();
         }
 
         #endregion
@@ -290,7 +290,7 @@ namespace Synapse.Crypto.Patterns
         /// <summary>
         /// Data source of the "main" table
         /// </summary>
-        public ObservableCollection<ScreenItem> ScreenItems { private set; get; } = [];
+        public List<MasterTableItem> MasterItems { private set; get; } = [];
 
         //public List<TimeSeriesItem> Indexes { set; get; }
 
@@ -394,7 +394,10 @@ namespace Synapse.Crypto.Patterns
 
         }
 
-        public async Task Shutdown()
+        /// <summary>
+        /// Actions when the application is terminated
+        /// </summary>
+        public async Task ShutdownAsync()
         {
             if(subscriptions.Count > 0)
             {
@@ -490,7 +493,7 @@ namespace Synapse.Crypto.Patterns
                 // если нет данных за предыдущий день
                 if (Candles[info.Symbol].First().OpenTime.Date >= DateTime.UtcNow.Date) continue;
 
-                var item = ScreenItems.FirstOrDefault(i => i.Symbol == info.Symbol);
+                var item = MasterItems.FirstOrDefault(i => i.Symbol == info.Symbol);
 
                 if (item == null)
                 {
@@ -499,8 +502,8 @@ namespace Synapse.Crypto.Patterns
                     int rank = 99999;
                     if (ci.AddedTime != DateTime.MinValue)
                         rank = ci.Rank;
-                    item = new ScreenItem(sec, info) { Rank = rank };
-                    ScreenItems.Add(item);
+                    item = new MasterTableItem(sec, info) { Rank = rank };
+                    MasterItems.Add(item);
                 }
 
 
@@ -553,10 +556,10 @@ namespace Synapse.Crypto.Patterns
 
             }
 
-            OnScreenUpdate();
+            OnMasterTableUpdate();
         }
 
-        public void SaveMarkupForScreenItem(ScreenItem item)
+        public void SaveMarkupForScreenItem(MasterTableItem item)
         {
             var path = Path.Combine(Folders.Patterns["Single"], $"{item.Symbol}.csv");
             if(item.CandleMarkups.Count != 0)
@@ -567,7 +570,7 @@ namespace Synapse.Crypto.Patterns
         {
             var stats = new Dictionary<string, Dictionary<CandlePatterns, CandlePatternStat>>();
 
-            var items = ScreenItems.Where(s => s.CandleMarkups.Count != 0).ToArray();
+            var items = MasterItems.Where(s => s.CandleMarkups.Count != 0).ToArray();
             Task<Dictionary<CandlePatterns, CandlePatternStat>>[] tasks = new Task<Dictionary<CandlePatterns, CandlePatternStat>>[items.Length];
 
             for(var i = 0; i < items.Length; i++)
@@ -586,7 +589,7 @@ namespace Synapse.Crypto.Patterns
 
         }
 
-        private static Dictionary<CandlePatterns, CandlePatternStat> GetCandlePatternStatistics(ScreenItem item, List<Candle> candles)
+        private static Dictionary<CandlePatterns, CandlePatternStat> GetCandlePatternStatistics(MasterTableItem item, List<Candle> candles)
         {
             var stats = new Dictionary<CandlePatterns, CandlePatternStat>();
             foreach (var pattern in Enum.GetValues(typeof(CandlePatterns)))
@@ -596,7 +599,7 @@ namespace Synapse.Crypto.Patterns
             return stats;
         }
 
-        private static CandlePatternStat GetCandlePatternStatistic(ScreenItem item, CandlePatterns pattern, List<Candle> candles)
+        private static CandlePatternStat GetCandlePatternStatistic(MasterTableItem item, CandlePatterns pattern, List<Candle> candles)
         {
             var times = item.CandleMarkups.Where(m => m.Pattern == pattern).Select(c => c.Time);
             var criteria = new HashSet<DateTime>(times);

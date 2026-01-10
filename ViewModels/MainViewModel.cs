@@ -131,7 +131,7 @@ namespace Synapse.Crypto.Patterns
 
         public void OnClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            root.Shutdown().Wait();
+            root.ShutdownAsync().Wait();
             App.Current.Shutdown();
         }
 

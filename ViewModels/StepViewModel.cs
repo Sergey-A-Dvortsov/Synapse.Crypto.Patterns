@@ -34,7 +34,7 @@ namespace Synapse.Crypto.Patterns
 
         private ChartTypes chartType;
 
-        public StepViewModel(WpfPlot plot, ScreenItem item, ChartTypes chartType = ChartTypes.Сandlesticks) 
+        public StepViewModel(WpfPlot plot, MasterTableItem item, ChartTypes chartType = ChartTypes.Сandlesticks) 
         {
             Plot = plot;
             plt = Plot.Plot;
@@ -64,8 +64,8 @@ namespace Synapse.Crypto.Patterns
 
       //  public ICollectionView ItemsView => CollectionViewSource.GetDefaultView(ScreenItem.CandleMarkups);
 
-        private ScreenItem _screenItem;
-        public ScreenItem ScreenItem
+        private MasterTableItem _screenItem;
+        public MasterTableItem ScreenItem
         {
             get => _screenItem;
             set

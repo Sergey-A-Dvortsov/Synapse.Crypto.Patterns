@@ -19,7 +19,7 @@ namespace Synapse.Crypto.Patterns
     /// </summary>
     public partial class MarkupWnd : Window
     {
-        public MarkupWnd(ScreenItem item)
+        public MarkupWnd(MasterTableItem item)
         {
             InitializeComponent();
             DataContext = new MarkupViewModel(Plot, item);

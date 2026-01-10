@@ -9,6 +9,7 @@ using System.Windows.Data;
 
 namespace Synapse.Crypto.Patterns
 {
+    // Copyright(c) [2026], [Sergey Dvortsov]
     public class RangeIntervalBoolConverter : IValueConverter
     {
 

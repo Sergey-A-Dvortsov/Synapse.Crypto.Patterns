@@ -86,7 +86,7 @@ namespace Synapse.Crypto.Patterns
         private SlopeLine? slope;
 
 
-        public SimulatorViewModel(WpfPlot plot, ScreenItem item)
+        public SimulatorViewModel(WpfPlot plot, MasterTableItem item)
         {
             Plot = plot;
             plt = plot.Plot;

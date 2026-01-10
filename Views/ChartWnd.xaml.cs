@@ -58,7 +58,7 @@ namespace Synapse.Crypto.Patterns
             RangeCommand = new DelegateCommand(OnRange, CanRange);
         }
 
-        public ChartWnd(ScreenItem item, bool highLowLine) : this()
+        public ChartWnd(MasterTableItem item, bool highLowLine) : this()
         {
             plt = Plot.Plot;
             ScreenItem = item;
@@ -75,8 +75,8 @@ namespace Synapse.Crypto.Patterns
 
         #region properties
 
-        private ScreenItem _screenItem;
-        public ScreenItem ScreenItem
+        private MasterTableItem _screenItem;
+        public MasterTableItem ScreenItem
         {
             get => _screenItem;
             set

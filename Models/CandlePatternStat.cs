@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Synapse.Crypto.Patterns
 {
-
+    // Copyright(c) [2026], [Sergey Dvortsov]
     /// <summary>
     /// Статистические параметры, получаемые из наборов размеченных свечей. Используются для распознавания одиночных свечных формаций.
     /// </summary>

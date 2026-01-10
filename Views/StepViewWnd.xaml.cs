@@ -20,7 +20,7 @@ namespace Synapse.Crypto.Patterns
     /// </summary>
     public partial class StepViewWnd : Window
     {
-        public StepViewWnd(ScreenItem item)
+        public StepViewWnd(MasterTableItem item)
         {
             InitializeComponent();
             DataContext = new StepViewModel(Plot, item);

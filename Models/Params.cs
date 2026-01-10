@@ -8,7 +8,7 @@ using Synapse.General;
 
 namespace Synapse.Crypto.Patterns
 {
-
+    // Copyright(c) [2026], [Sergey Dvortsov]
     /// <summary>
     /// Базовая статистика
     /// </summary>

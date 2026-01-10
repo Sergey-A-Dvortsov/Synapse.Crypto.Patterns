@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace Synapse.Crypto.Patterns
 {
+    // Copyright(c) [2026], [Sergey Dvortsov]
     /// <summary>
     /// Структура для хранения информации о размеченной свече.
     /// </summary>

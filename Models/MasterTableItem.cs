@@ -12,15 +12,18 @@ using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace Synapse.Crypto.Patterns
 {
-
+    // Copyright(c) [2026], [Sergey Dvortsov]
+    /// <summary>
+    /// The main table element
+    /// </summary>
     [CategoryOrder("High/Low levels", 0)]
     [CategoryOrder("Break/Retest Time", 1)]
     [CategoryOrder("Дополнительно", 3)]
     [DisplayName("Retests")]
     [Description("Иннформация о ретестах")]
-    public class ScreenItem : INotifyPropertyChanged
+    public class MasterTableItem : INotifyPropertyChanged
     {
-        public ScreenItem(BybitSecurity security, CandleStorageInfo info)
+        public MasterTableItem(BybitSecurity security, CandleStorageInfo info)
         {
             Security = security;
             Start = info.StorageStart;

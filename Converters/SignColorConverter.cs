@@ -6,7 +6,7 @@ using System.Windows;
 
 namespace Synapse.Crypto.Patterns
 {
-
+    // Copyright(c) [2026], [Sergey Dvortsov]
     /// <summary>
     /// Возвращает цвет в зависимости от знака числа 
     /// </summary>

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Synapse.Crypto.Patterns
 {
-
+    // Copyright(c) [2026], [Sergey Dvortsov]
     /// <summary>
     /// Набор характеристик ценового интервала: максимумы, минимумы и т.п.
     /// </summary>

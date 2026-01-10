@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Synapse.Crypto.Patterns
 {
+    // Copyright(c) [2026], [Sergey Dvortsov]
     public class MarketBreadthItem
     {
         public DateTime Time { set; get; }
