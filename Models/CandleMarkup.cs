@@ -10,7 +10,7 @@ namespace Synapse.Crypto.Patterns
 {
     // Copyright(c) [2026], [Sergey Dvortsov]
     /// <summary>
-    /// Структура для хранения информации о размеченной свече.
+    /// Structure for storing information about the marked candle.
     /// </summary>
     public struct CandleMarkup : INotifyPropertyChanged
     {
@@ -19,7 +19,7 @@ namespace Synapse.Crypto.Patterns
 
         private ChartTypes _chartType = ChartTypes.Сandlesticks;
         /// <summary>
-        /// Тип графика
+        /// Chart type
         /// </summary>
         public ChartTypes ChartType
         {
@@ -33,7 +33,7 @@ namespace Synapse.Crypto.Patterns
 
         private DateTime _time;
         /// <summary>
-        /// Время открытия размеченной свечи
+        /// Markup candle's open time
         /// </summary>
         public DateTime Time 
         {
@@ -47,7 +47,7 @@ namespace Synapse.Crypto.Patterns
 
         private CandlePatterns _pattern;
         /// <summary>
-        /// Паттерн
+        /// Pattern
         /// </summary>
         public CandlePatterns Pattern 
         {
@@ -79,19 +79,20 @@ namespace Synapse.Crypto.Patterns
         }
 
         /// <summary>
-        /// Парсит информацию из строки в CandleMarkup. 
+        /// Parse from string. 
         /// </summary>
-        /// <param name="line">строка с данными о CandleMarkup</param>
-        /// <returns></returns>
+        /// <param name="line">data string</param>
+        /// <returns>CandleMarkup</returns>
         public static CandleMarkup Parse(string line, ChartTypes chartType = ChartTypes.Сandlesticks)
         {
             var arr = line.Split(";");
 
-            CandleMarkup markup = new();
+            CandleMarkup markup = new()
+            {
+                Time = DateTime.Parse(arr[0])
+            };
 
-            markup.Time = DateTime.Parse(arr[0]);
-
-            if(chartType == ChartTypes.Сandlesticks)
+            if (chartType == ChartTypes.Сandlesticks)
             {
                 markup.Pattern = arr[1] == "H" ? CandlePatterns.Hummer : arr[1] == "S" ? CandlePatterns.SpinningTop : CandlePatterns.Doji;
                 markup.Direction = arr[2] == "U" ? MarkupDirection.Up : MarkupDirection.Down;

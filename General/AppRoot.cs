@@ -217,8 +217,6 @@ namespace Synapse.Crypto.Patterns
 
         private readonly List<string> subscriptions = []; // streaming exchanges data subscriptions
 
-        //private List<CandleStorageInfo>? StorageInfo { get; set; }
-
         private StorageManager storageManager; // to work with file storage
 
         private AppRoot()
@@ -244,7 +242,10 @@ namespace Synapse.Crypto.Patterns
             return root;
         }
 
-        public Logger logger; // logging
+        /// <summary>
+        /// logging
+        /// </summary>
+        public Logger logger; 
 
         #region events
 
@@ -300,11 +301,6 @@ namespace Synapse.Crypto.Patterns
         public Dictionary<string, List<Candle>> Candles { private set; get; } = [];
 
         public Dictionary<string, List<Candle>> OnlineCandles { private set; get; } = [];
-
-        /// <summary>
-        /// Статистические данные по свечным паттернам. Используются для распознавания одипочного свечного паттерна.
-        /// </summary>
-        public Dictionary<string, Dictionary<CandlePatterns, CandlePatternStat>> CandlePatternStats { private set; get; }
 
         public CMCClient CMCClient { private set; get; }
 
@@ -367,7 +363,7 @@ namespace Synapse.Crypto.Patterns
 
             CMCClient = CMCClient.GetInstance();
 
-            var securities = await BbClient.LoadSecurity([Category.LINEAR]);
+            var securities = await BbClient.LoadSecuritiesAsync([Category.LINEAR]);
 
             Swaps = [.. securities.Where(s => s.ContractType == ContractType.LinearPerpetual && s.QuoteCoin == "USDT" 
             && ! excludes.Any(e => e == s.BaseCoin))];
@@ -426,7 +422,7 @@ namespace Synapse.Crypto.Patterns
 
                 await CMCClient.LoadCoinCapInfo(CMCClient.GetCoinCaps());
 
-                UpdateScanTable(true);
+                UpdateMainTable(true);
         }
         
         private async Task ProductInit(DateTime start)
@@ -451,7 +447,7 @@ namespace Synapse.Crypto.Patterns
 
                 //VolatilityParams = await GetVolatilityParams();
 
-                UpdateScanTable(true);
+                UpdateMainTable(true);
 
         }
 
@@ -476,9 +472,9 @@ namespace Synapse.Crypto.Patterns
             //var temp = Candles[symbol].TakeLast(20).ToList(); 
         }
 
-        public void UpdateScanTable(bool init)
+        public void UpdateMainTable(bool init)
         {
-            OnNewStatusMessage("Обновление данных в ScreenItems.");
+            OnNewStatusMessage("The master table update.");
 
             bool prevDayExtremums = true;
             bool prevDayRetest = true;
@@ -505,7 +501,6 @@ namespace Synapse.Crypto.Patterns
                     item = new MasterTableItem(sec, info) { Rank = rank };
                     MasterItems.Add(item);
                 }
-
 
                 if (prevDayExtremums)
                 {
@@ -542,8 +537,6 @@ namespace Synapse.Crypto.Patterns
                 {
 
                 }
-
-
 
                 // Если метод выполняется при инициализации, то загружаем данные маркировки из хранилища.
                 if (markupfiles != null)

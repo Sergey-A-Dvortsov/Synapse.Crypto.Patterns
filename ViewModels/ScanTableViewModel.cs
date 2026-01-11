@@ -196,7 +196,7 @@ namespace Synapse.Crypto.Patterns
         private async void OnScreenUpdate(object obj)
         {
             //await root.LoadCandlesFromBurseAndUpdateStorage(false);
-            root.UpdateScanTable(false);
+            root.UpdateMainTable(false);
         }
 
         private bool CanScreenUpdate(object obj)
