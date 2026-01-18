@@ -2,11 +2,21 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\crosshair_32.png" />
+    <None Remove="Resources\crosshair_black_32.png" />
+    <None Remove="Resources\left_icon_32.png" />
+    <None Remove="Resources\right_icon_32.png" />
+    <None Remove="Resources\setup_32_4.png" />
+    <None Remove="Resources\slash2_32.png" />
+    <None Remove="Resources\slash_32.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Extended.Wpf.Toolkit" Version="5.0.0" />
@@ -14,14 +24,40 @@
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NLog" Version="6.0.7" />
-    <PackageReference Include="ScottPlot.WPF" Version="5.0.56" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Libs\bybit.net.api-main\Src\Common\bybit.net.api.csproj" />
+    <ProjectReference Include="..\..\Libs\ScottPlot\src\ScottPlot5\ScottPlot5 Controls\ScottPlot.WPF\ScottPlot.WPF.csproj" />
+    <ProjectReference Include="..\..\Libs\ScottPlot\src\ScottPlot5\ScottPlot5 Cookbook\ScottPlot Cookbook.csproj" />
+    <ProjectReference Include="..\..\Libs\ScottPlot\src\ScottPlot5\ScottPlot5\ScottPlot.csproj" />
     <ProjectReference Include="..\..\Synapse\Synapse.General\Synapse.General.csproj" />
     <ProjectReference Include="..\Synapse.Crypto.Bybit\Synapse.Crypto.Bybit.csproj" />
     <ProjectReference Include="..\Synapse.Crypto.Trading\Synapse.Crypto.Trading.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\crosshair_32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\crosshair_black_32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\left_icon_32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\right_icon_32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\setup_32_4.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\slash2_32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\slash_32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>

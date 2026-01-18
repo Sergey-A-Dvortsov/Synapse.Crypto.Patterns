@@ -1,4 +1,6 @@
-﻿using bybit.net.api.Models;
+﻿// Copyright(c) [2026], [Sergey Dvortsov]
+
+using bybit.net.api.Models;
 using bybit.net.api.Models.Market;
 using NLog;
 using Synapse.Crypto.Bybit;
@@ -6,6 +8,7 @@ using Synapse.Crypto.Trading;
 using Synapse.General;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
@@ -17,7 +20,66 @@ using System.Windows.Shapes;
 
 namespace Synapse.Crypto.Patterns
 {
-    // Copyright(c) [2026], [Sergey Dvortsov]
+    /// <summary>
+    /// Information about the candles stored in the file storage a specific instrument.
+    /// </summary>
+    public class CandleStorageInfo
+    {
+        /// <summary>
+        /// Symbol for loading candles.
+        /// </summary>
+        public required string Symbol { get; set; }
+        /// <summary>
+        /// Start time for loading candles for the symbol.
+        /// </summary>
+        public DateTime Start { get; set; }
+        /// <summary>
+        /// End time for loading candles for the symbol.
+        /// </summary>
+        public DateTime End { get; set; }
+
+        /// <summary>
+        /// Start time for storage of candles for the symbol.
+        /// </summary>
+        public DateTime StorageStart { get; set; }
+
+        public bool Active { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Symbol};{Start:yyyy-MM-dd HH:mm:ss};{End:yyyy-MM-dd HH:mm:ss};{StorageStart:yyyy-MM-dd HH:mm:ss};{Active}";
+        }
+
+        public static CandleStorageInfo? Parse(string line)
+        {
+            var parts = line.Split(';');
+            if (parts.Length != 5) return null;
+
+            return new CandleStorageInfo
+            {
+                Symbol = parts[0],
+                Start = DateTime.ParseExact(parts[1], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                End = DateTime.ParseExact(parts[2], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                StorageStart = DateTime.ParseExact(parts[3], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                Active = bool.Parse(parts[4]) // Assuming the last part is Active status
+            };
+
+        }
+
+        /// <summary>
+        /// Downloads information from the candlestick download log. The log contains data about the symbol, the first date, and the last date of the data in the storage.
+        /// </summary>
+        /// <param name="filepath">file path</param>
+        /// <returns></returns>
+        public static List<CandleStorageInfo>? LoadFromStorage(string filepath)
+        {
+            if (!File.Exists(filepath)) return null;
+            var lines = File.ReadAllLines(filepath);
+            return [.. lines.Select(CandleStorageInfo.Parse).Where(info => info != null)];
+        }
+
+    }
+   
     /// <summary>
     /// File storage management
     /// </summary>

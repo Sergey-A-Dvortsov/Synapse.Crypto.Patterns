@@ -1,4 +1,6 @@
-﻿using Synapse.Crypto.Trading;
+﻿// Copyright(c) [2026], [Sergey Dvortsov]
+
+using Synapse.Crypto.Trading;
 using Synapse.General;
 using System;
 using System.Collections.Generic;
@@ -9,6 +11,44 @@ using System.Threading.Tasks;
 
 namespace Synapse.Crypto.Patterns
 {
+
+    public class IndexCalcItem
+    {
+        public required string Symbol { set; get; }
+        public DateTime FirstTime { set; get; }
+        public DateTime LastTime { set; get; }
+        public int StartIndex { set; get; }
+        public double FirstPrice { set; get; }
+        public DateTime NowTime { set; get; }
+        public double NowPrice { set; get; }
+        public double Prev24hPrice { set; get; }
+        public bool Active { set; get; }
+        public int Count { set; get; }
+
+        public double FullChange
+        {
+            get => 100 * (NowPrice / FirstPrice - 1);
+        }
+
+        public double Change24h
+        {
+            get => 100 * (NowPrice / Prev24hPrice - 1);
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append(Symbol + ";");
+            sb.Append(FirstTime + ";");
+            sb.Append(LastTime + ";");
+            sb.Append(StartIndex + ";");
+            sb.Append(FirstPrice);
+            return sb.ToString();
+        }
+
+
+    }
+
     public class CryptoIndexService
     {
         private AppRoot root = AppRoot.GetInstance();

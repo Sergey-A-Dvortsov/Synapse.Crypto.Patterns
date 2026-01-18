@@ -79,18 +79,34 @@
                 <ComboBox Margin="5, 2" Width="100" ItemsSource="{Binding Source={StaticResource chartTypes}}"
                           SelectedItem="{Binding ChartType}" ToolTip="Тип графика"/>
 
-                <Menu >
-                    <MenuItem Header="Range">
-                        <MenuItem Header="One day" Command="{Binding RangeCommand}" CommandParameter="Day" IsCheckable="True" 
+                <Menu Width="32" Background="Transparent" >
+                    <MenuItem>
+                        <MenuItem.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Resources/slash2_32.png" Height="17" Width="17" Margin="0,0,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </MenuItem.HeaderTemplate>
+
+                        <MenuItem Header="Lines">
+                            <MenuItem Header="Slope by candles" Command="{Binding LinesCommand}" CommandParameter="slope_by_candles" IsCheckable="True" 
+                                  IsChecked="False" ToolTip="Нарисовать наклонную по двум свечам"/>
+                            <MenuItem Header="Slope" Command="{Binding LinesCommand}" CommandParameter="slope" IsCheckable="True" 
+                                  IsChecked="False" ToolTip="Нарисовать линию тренда" />
+                        </MenuItem>
+                        <MenuItem Header="Ranges">
+                            <MenuItem Header="One day" Command="{Binding RangeCommand}" CommandParameter="Day" IsCheckable="True" 
                                   IsChecked="{Binding RangeInterval, Converter={StaticResource RangeIntervalBoolConv}, ConverterParameter=Day}" />
-                        <MenuItem Header="Three days" Command="{Binding RangeCommand}" CommandParameter="Three" IsCheckable="True"
+                            <MenuItem Header="Three days" Command="{Binding RangeCommand}" CommandParameter="Three" IsCheckable="True"
                                   IsChecked="{Binding RangeInterval, Converter={StaticResource RangeIntervalBoolConv}, ConverterParameter=Three}" />
-                        <MenuItem Header="Week" Command="{Binding RangeCommand}" CommandParameter="Week" IsCheckable="True"
+                            <MenuItem Header="Week" Command="{Binding RangeCommand}" CommandParameter="Week" IsCheckable="True"
                                   IsChecked="{Binding RangeInterval, Converter={StaticResource RangeIntervalBoolConv}, ConverterParameter=Week}" />
-                        <MenuItem Header="Month" Command="{Binding RangeCommand}" CommandParameter="Month" IsCheckable="True"
+                            <MenuItem Header="Month" Command="{Binding RangeCommand}" CommandParameter="Month" IsCheckable="True"
                                   IsChecked="{Binding RangeInterval, Converter={StaticResource RangeIntervalBoolConv}, ConverterParameter=Month}" />
-                        <Separator/>
-                        <MenuItem Header="Clear" Command="{Binding RangeCommand}" CommandParameter="Clear" />
+                            <Separator/>
+                            <MenuItem Header="Clear" Command="{Binding RangeCommand}" CommandParameter="Clear" />
+                        </MenuItem>
                     </MenuItem>
                 </Menu>
 
@@ -98,9 +114,9 @@
                     <Image Source="/Resources/crosshair_black_32.png" Height="18"/>
                 </ToggleButton>
 
-                <Button Command="{Binding PlotSlopeCommand}" ToolTip="Нарисовать наклонную по двум свечам" >
+                <!--<Button Command="{Binding PlotSlopeCommand}" ToolTip="Нарисовать наклонную по двум свечам" >
                     <Image Source="/Resources/slash_32.png"  Height="18"/>
-                </Button>
+                </Button>-->
 
             </ToolBar>
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">

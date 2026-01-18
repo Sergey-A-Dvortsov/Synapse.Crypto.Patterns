@@ -17,6 +17,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using Synapse.Crypto.Trading;
+using ScottPlot.Plottables.Interactive;
 
 namespace Synapse.Crypto.Patterns
 {
@@ -59,7 +60,6 @@ namespace Synapse.Crypto.Patterns
         private List<OHLC>? oHLCs;
         private List<SelectedCandle> selectedCandles = [];
 
-
         //private Scatter? selectedScatter;
         //private Marker? selectedCandleMarker;
         //private List<Markers?> candleMarkers = []; // хранит маркеры выбранных свечей
@@ -70,7 +70,6 @@ namespace Synapse.Crypto.Patterns
         private HorizontalLine? maxRangeLine; // верхняя линия диапазона
         private HorizontalLine? minRangeLine; // нижняя линия диапазона
 
-
         private HorizontalLine? takeLine; // верхняя линия диапазона
         private HorizontalLine? stopLine; // нижняя линия диапазона
 
@@ -78,13 +77,21 @@ namespace Synapse.Crypto.Patterns
         private double grabVrange = 0.02;   // зона захвата по вертикальной координате.
                                             // Захват возникает, если разность между вертикальными координатами курсора и объекта меньше 0.01%
 
+        private InteractiveLineSegment interactiveSegment;
+        private InteractiveHorizontalLine interactiveLine;
+
         //WpfPlot1.Plot.Add.InteractiveHorizontalLineSegment(x1, x2, y);
 
         //  private InteractiveHorizontalLineSegment takeLine
 
+        //CoordinateLine line = Generate.RandomLine();
+        //WpfPlot1.Plot.Add.InteractiveLineSegment(line);
 
         private SlopeLine? slope;
 
+        private IYAxis yaxis;
+
+        private Edge yedge = Edge.Left;
 
         public SimulatorViewModel(WpfPlot plot, MasterTableItem item)
         {
@@ -93,10 +100,10 @@ namespace Synapse.Crypto.Patterns
             Symbol = item.Symbol;
             security = item.Security;
 
-
             SetStartTimeCommand = new DelegateCommand(OnSetStartTime, CanSetStartTime);
             NextCommand = new DelegateCommand(OnNext, CanNext);
             RangeCommand = new DelegateCommand(OnRange, CanRange);
+            LinesCommand = new DelegateCommand(OnLines, CanLines);
             PlotSlopeCommand = new DelegateCommand(OnPlotSlope, CanPlotSlope);
 
             candles = root.Candles[item.Symbol];
@@ -104,6 +111,8 @@ namespace Synapse.Crypto.Patterns
             SetStartTime();
             Trading = new([.. candles], security);
             menu = (WpfPlotMenu)Plot.Menu;
+
+            yaxis = yedge == Edge.Left ? plt.Axes.Left : plt.Axes.Right;
 
             // plt.Add.InteractiveHorizontalLine(4);
 
@@ -128,7 +137,6 @@ namespace Synapse.Crypto.Patterns
         /// </summary>
         public Candle CurrentCandle { private set; get; }
 
-
         private bool _crosshairOn;
         /// <summary>
         /// Включить/выключить перекрестье
@@ -144,6 +152,20 @@ namespace Synapse.Crypto.Patterns
                     CreateCrosshair();
                 else
                     DeleteCrosshair();
+            }
+        }
+
+        private bool _isSlope;
+        /// <summary>
+        /// Включить/выключить перекрестье
+        /// </summary>
+        public bool IsSlope
+        {
+            get => _isSlope;
+            set
+            {
+                _isSlope = value;
+                NotifyPropertyChanged();
             }
         }
 
@@ -550,6 +572,60 @@ namespace Synapse.Crypto.Patterns
 
         }
 
+        public DelegateCommand LinesCommand { get; set; }
+
+        private void OnLines(object arg)
+        {
+            switch (arg.ToString())
+            {
+                case "slope":
+                    {
+                        IsSlope = true;
+                        break;
+                    }
+                case "slope_by_candles":
+                    {
+                        if (slope == null)
+                        {
+                            slope = new(selectedCandles[^2].Candle, selectedCandles[^1].Candle);
+                            slope.SetMinMax(displaycandles);
+                            slope.Line = plt.Add.Line(slope.GetCoordinateLine().GetValueOrDefault());
+                            slope.Line.Axes.YAxis = yaxis;
+                        }
+                        else
+                        {
+                            plt.Remove(slope.Line);
+                            slope = null;
+                        }
+
+                        break;
+                    }
+                default:
+                    break;
+            }
+
+            Plot.Refresh();
+
+        }
+
+        private bool CanLines(object arg)
+        {
+            switch (arg.ToString())
+            {
+                case "slope":
+                    {
+                        break;
+                    }
+                case "slope_by_candles":
+                    {   var isSelected = selectedCandles?.Count > 1 || slope != null;
+                        return isSelected;
+                    }
+                default:
+                    break;
+            }
+            return true;
+        }
+
         public DelegateCommand PlotSlopeCommand { get; set; }
 
         private void OnPlotSlope(object arg)
@@ -559,7 +635,7 @@ namespace Synapse.Crypto.Patterns
                 slope = new(selectedCandles[^2].Candle, selectedCandles[^1].Candle);
                 slope.SetMinMax(displaycandles);
                 slope.Line = plt.Add.Line(slope.GetCoordinateLine().GetValueOrDefault());
-                slope.Line.Axes.YAxis = plt.Axes.Right;
+                slope.Line.Axes.YAxis = yaxis;
             }
             else
             {
@@ -573,10 +649,8 @@ namespace Synapse.Crypto.Patterns
 
         private bool CanPlotSlope(object arg)
         {
-            return selectedCandles?.Count() > 1 || slope != null;
+            return selectedCandles?.Count > 1 || slope != null;
         }
-
-
 
         #endregion
 
@@ -594,7 +668,7 @@ namespace Synapse.Crypto.Patterns
             cndlPlot = plt.Add.Candlestick(oHLCs);
 
             // configure the plottable to use the right Y axis
-            cndlPlot.Axes.YAxis = plt.Axes.Right;
+            cndlPlot.Axes.YAxis = yaxis;
             //cndlPlot.Sequential = true;
             plt.Axes.DateTimeTicksBottom();
 
@@ -606,7 +680,7 @@ namespace Synapse.Crypto.Patterns
         {
             ch = plt.Add.Crosshair(0, 0);
             ch.Axes.XAxis = plt.Axes.Bottom;
-            ch.Axes.YAxis = plt.Axes.Right;
+            ch.Axes.YAxis = yaxis;
 
             //ch.VerticalLine.LabelOffsetY = 3;
             ch.VerticalLine.LabelBorderWidth = 1;
@@ -654,8 +728,8 @@ namespace Synapse.Crypto.Patterns
                 {
                     maxRangeLine = plt.Add.HorizontalLine(range.Max, 1, ScottPlot.Colors.Green);
                     minRangeLine = plt.Add.HorizontalLine(range.Min, 1, ScottPlot.Colors.Red);
-                    maxRangeLine.Axes.YAxis = plt.Axes.Right;
-                    minRangeLine.Axes.YAxis = plt.Axes.Right;
+                    maxRangeLine.Axes.YAxis = yaxis;
+                    minRangeLine.Axes.YAxis = yaxis;
                 }
 
             }
@@ -679,7 +753,7 @@ namespace Synapse.Crypto.Patterns
                     takeLine = plt.Add.HorizontalLine(price, 1, ScottPlot.Colors.Blue);
                     takeLine.IsDraggable = true;
                     takeLine.Text = "Take";
-                    takeLine.Axes.YAxis = plt.Axes.Right;
+                    takeLine.Axes.YAxis = yaxis;
                 }
 
             }
@@ -696,7 +770,7 @@ namespace Synapse.Crypto.Patterns
                     stopLine = plt.Add.HorizontalLine(price, 1, ScottPlot.Colors.Orange);
                     stopLine.IsDraggable = true;
                     stopLine.Text = "Stop";
-                    stopLine.Axes.YAxis = plt.Axes.Right;
+                    stopLine.Axes.YAxis = yaxis;
                 }
 
             }
@@ -783,6 +857,21 @@ namespace Synapse.Crypto.Patterns
             System.Windows.Point p = e.GetPosition(Plot);
             Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
             Coordinates mouseCoords = plt.GetCoordinates(pixel, plt.Axes.Bottom, plt.Axes.Right);
+
+            if (IsSlope)
+            {
+                CoordinateLine line = new(mouseCoords, new Coordinates(mouseCoords.X * 1.01, mouseCoords.Y));
+                interactiveSegment = plt.Add.InteractiveLineSegment(line);
+                interactiveSegment.Axes.YAxis = yaxis;
+
+                interactiveLine = plt.Add.InteractiveHorizontalLine(mouseCoords.Y - 50);
+                interactiveLine.Axes.YAxis = yaxis;
+
+                IsSlope = false;
+
+                Plot.Refresh();
+            }
+
             //SelectCandle(mouseCoords);
         }
 
@@ -805,7 +894,7 @@ namespace Synapse.Crypto.Patterns
             System.Windows.Point p = e.GetPosition(Plot);
             Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
             Coordinates mouseCoords = plt.GetCoordinates(pixel, plt.Axes.Bottom, plt.Axes.Right);
-            e.Handled = SelectCandle(mouseCoords);
+            //e.Handled = SelectCandle(mouseCoords);
         }
 
         private void Plot_MouseDown(object sender, MouseButtonEventArgs e)
@@ -816,49 +905,49 @@ namespace Synapse.Crypto.Patterns
 
             var lines = plt.GetPlottables().OfType<HorizontalLine>().Where(l => l.IsDraggable);
 
-            foreach (var line in lines)
-            {
-                // Если курсор достаточно близко к линии по оси Y, "захватываем" её
+            //foreach (var line in lines)
+            //{
+            //    // Если курсор достаточно близко к линии по оси Y, "захватываем" её
 
-                if (line.Grab(mouseCoords.Y) < grabVrange)
-                {
-                    draggedLine = line;
-                    break;
-                }
+            //    if (line.Grab(mouseCoords.Y) < grabVrange)
+            //    {
+            //        draggedLine = line;
+            //        break;
+            //    }
 
-            }
+            //}
 
-            if (draggedLine is null)
-                Plot.Cursor = Cursors.Arrow;
-            else if (draggedLine is HorizontalLine)
-            {
-                Plot.UserInputProcessor.IsEnabled = true;
-                Plot.Cursor = Cursors.SizeNS;
-                e.Handled = true;
-            }
+            //if (draggedLine is null)
+            //    Plot.Cursor = Cursors.Arrow;
+            //else if (draggedLine is HorizontalLine)
+            //{
+            //    Plot.UserInputProcessor.IsEnabled = true;
+            //    Plot.Cursor = Cursors.SizeNS;
+            //    e.Handled = true;
+            //}
 
 
         }
 
         private void Plot_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (draggedLine != null)
-            {
-                if (draggedLine.Text == "Take")
-                {
-                    //TODO Изменить тейк
-                }
+            //if (draggedLine != null)
+            //{
+            //    if (draggedLine.Text == "Take")
+            //    {
+            //        //TODO Изменить тейк
+            //    }
 
-                if (draggedLine.Text == "Stop")
-                {
-                    //TODO Изменить стоп
-                }
+            //    if (draggedLine.Text == "Stop")
+            //    {
+            //        //TODO Изменить стоп
+            //    }
 
-                draggedLine = null;
-                Plot.Cursor = Cursors.Arrow;
-                Plot.UserInputProcessor.Reset();
-                Plot.Refresh();
-            }
+            //    draggedLine = null;
+            //    Plot.Cursor = Cursors.Arrow;
+            //    Plot.UserInputProcessor.Reset();
+            //    Plot.Refresh();
+            //}
         }
 
 
@@ -944,7 +1033,7 @@ namespace Synapse.Crypto.Patterns
                 double[] Y = [sOHLC.High, sOHLC.Low];
 
                 var m = plt.Add.Markers(X, Y);
-                m.Axes.YAxis = plt.Axes.Right;
+                m.Axes.YAxis = yaxis;
                 m.MarkerSize = 10;
                 m.MarkerShape = MarkerShape.FilledDiamond;
                 m.Color = ScottPlot.Colors.Blue;
@@ -1027,7 +1116,7 @@ namespace Synapse.Crypto.Patterns
             double[] Y = [sOHLC.High, sOHLC.Low];
 
             //candleMarkers[marIdx] = plt.Add.Markers(X, Y);
-            //candleMarkers[marIdx].Axes.YAxis = plt.Axes.Right;
+            //candleMarkers[marIdx].Axes.YAxis = yaxis;
             //candleMarkers[marIdx].MarkerSize = 10;
             //candleMarkers[marIdx].MarkerShape = MarkerShape.FilledDiamond;
             //candleMarkers[marIdx].Color = ScottPlot.Colors.Blue;
@@ -1052,7 +1141,7 @@ namespace Synapse.Crypto.Patterns
 
             //selectedCandleMarker = plt.Add.Marker(X, Y);
 
-            //selectedCandleMarker.Axes.YAxis = plt.Axes.Right;
+            //selectedCandleMarker.Axes.YAxis = yaxis;
             //selectedCandleMarker.MarkerSize = 10; // Большой размер
             //selectedCandleMarker.MarkerShape = MarkerShape.FilledDiamond; // Чёткая форма
             //selectedCandleMarker.Color = ScottPlot.Colors.Yellow; // Яркий цвет
@@ -1159,8 +1248,10 @@ namespace Synapse.Crypto.Patterns
             Plot.MouseDown += Plot_MouseDown;
             Plot.MouseUp += Plot_MouseUp;
 
-            plt.Grid.YAxis = plt.Axes.Right;
-            plt.Axes.Left.IsVisible = false;
+            plt.Grid.YAxis = yaxis;
+
+            if(yaxis.Edge == Edge.Right)
+                plt.Axes.Left.IsVisible = false;
 
             CreateCrosshair();
             Plotchart();
@@ -1168,8 +1259,6 @@ namespace Synapse.Crypto.Patterns
             //SetTakeStopMenu();
 
         }
-
-
 
         public void OnUnloaded(object sender, RoutedEventArgs e)
         {

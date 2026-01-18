@@ -1,5 +1,6 @@
 ﻿using ScottPlot;
 using ScottPlot.Plottables;
+using ScottPlot.Plottables.Interactive;
 using Synapse.Crypto.Bybit;
 using Synapse.Crypto.Trading;
 using System;
@@ -196,5 +197,93 @@ namespace Synapse.Crypto.Patterns
 
     }
 
+    /// <summary>
+    /// Наклонная линия. Строится по двум координатам. Эти базовые координаты определяются
+    /// при помощи свечей FirstCandle и SecondCandle, которые выбирает пользователь. 
+    /// Линия продлевается до уровней недельного максимума/минимума или максимума/минимума загруженных данных, если
+    /// загружено меньше недели.
+    /// </summary>
+    public class InteractiveSlopeLine
+    {
+
+        public InteractiveSlopeLine()
+        {
+        }
+
+
+        #region properties
+
+        /// <summary>
+        /// Направление линии. 0 - нисходящее, 1 - восхоящее, -1 - error
+        /// </summary>
+        public int Direct
+        {
+            get
+            {
+                if (FirstCoordinates == null || SecondCoordinates == null) return -1;
+                var dirct = FirstCoordinates.Value.Y > SecondCoordinates.Value.Y ? 0 : 1;
+                return dirct;
+            }
+        }
+
+        /// <summary>
+        /// Наклон линии. Нисходящий < 0, восходящий > 0.
+        /// </summary>
+        public double Slope
+        {
+            get { return GetSlope(); }
+        }
+
+        /// <summary>
+        /// Интервал графика (свечи)
+        /// </summary>
+        public TimeFrames TimeFrame { get; set; }
+
+        /// <summary>
+        /// Координата первой точки
+        /// </summary>
+        public Coordinates? FirstCoordinates { set; get; }
+
+        /// <summary>
+        /// Координата второй точки
+        /// </summary>
+        public Coordinates? SecondCoordinates { set; get; }
+
+        /// <summary>
+        /// График наклонной
+        /// </summary>
+        public InteractiveLineSegment Segment { set; get; }
+
+        #endregion
+
+        /// <summary>
+        /// Создает экземпляр CoordinateLine
+        /// </summary>
+        public CoordinateLine? CreateCoordinateLine()
+        {
+            if (FirstCoordinates == null || SecondCoordinates == null) return null;
+            return new CoordinateLine(FirstCoordinates.GetValueOrDefault(), SecondCoordinates.GetValueOrDefault());
+        }
+
+        // Возвращает уровень наклона линии - абсолютное изменение цены на единицу интервала
+        private double GetSlope()
+        {
+            if (Direct == -1) return double.NaN;
+
+            //if (FirstCandle != null && SecondCandle != null)
+            //{
+            //    int bars = (int)((SecondCandle?.OpenTime - FirstCandle?.OpenTime) / TimeSpan.FromMinutes((int)TimeFrame));
+
+            //    if (Direct == 0)
+            //        return (SecondCandle.Value.High - FirstCandle.Value.High) / bars;
+            //    else
+            //        return (SecondCandle.Value.Low - FirstCandle.Value.Low) / bars;
+            //}
+
+            return double.NaN;
+
+        }
+
+    }
 
 }
