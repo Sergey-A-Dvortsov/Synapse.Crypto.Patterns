@@ -12,6 +12,7 @@
     <None Remove="Resources\crosshair_32.png" />
     <None Remove="Resources\crosshair_black_32.png" />
     <None Remove="Resources\left_icon_32.png" />
+    <None Remove="Resources\recycling-bin.png" />
     <None Remove="Resources\right_icon_32.png" />
     <None Remove="Resources\setup_32_4.png" />
     <None Remove="Resources\slash2_32.png" />
@@ -44,6 +45,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\left_icon_32.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\recycling-bin.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\right_icon_32.png">

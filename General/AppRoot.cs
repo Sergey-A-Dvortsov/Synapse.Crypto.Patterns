@@ -275,7 +275,7 @@ namespace Synapse.Crypto.Patterns
 
             storageManager.Update();
 
-            bool debug = true; 
+            bool debug = false; 
 
             if (debug)
             {

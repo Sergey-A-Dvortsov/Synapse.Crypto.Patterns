@@ -1,9 +1,13 @@
-﻿using ScottPlot;
+﻿using NUnit.Framework.Internal.Execution;
+using ScottPlot;
 using ScottPlot.Interactivity;
 using ScottPlot.Plottables;
+using ScottPlot.Plottables.Interactive;
+using ScottPlot.TickGenerators.Financial;
 using ScottPlot.WPF;
-using Synapse.General;
 using Synapse.Crypto.Bybit;
+using Synapse.Crypto.Trading;
+using Synapse.General;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,8 +20,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
-using Synapse.Crypto.Trading;
-using ScottPlot.Plottables.Interactive;
 
 namespace Synapse.Crypto.Patterns
 {
@@ -78,7 +80,10 @@ namespace Synapse.Crypto.Patterns
                                             // Захват возникает, если разность между вертикальными координатами курсора и объекта меньше 0.01%
 
         private InteractiveLineSegment interactiveSegment;
-        private InteractiveHorizontalLine interactiveLine;
+
+        private InteractiveLine interactiveLine;
+
+        private InteractiveHorizontalLine interactiveHLine;
 
         //WpfPlot1.Plot.Add.InteractiveHorizontalLineSegment(x1, x2, y);
 
@@ -93,6 +98,8 @@ namespace Synapse.Crypto.Patterns
 
         private Edge yedge = Edge.Left;
 
+        private readonly List<IPlottable> elementsForDelete = [];
+
         public SimulatorViewModel(WpfPlot plot, MasterTableItem item)
         {
             Plot = plot;
@@ -105,6 +112,7 @@ namespace Synapse.Crypto.Patterns
             RangeCommand = new DelegateCommand(OnRange, CanRange);
             LinesCommand = new DelegateCommand(OnLines, CanLines);
             PlotSlopeCommand = new DelegateCommand(OnPlotSlope, CanPlotSlope);
+            DeleteElementCommand = new DelegateCommand(OnDeleteElement, CanDeleteElement);
 
             candles = root.Candles[item.Symbol];
             GoToItems = [NEXTBAR, TS, RANGEBREAK, SLOPEBREAK];
@@ -652,6 +660,22 @@ namespace Synapse.Crypto.Patterns
             return selectedCandles?.Count > 1 || slope != null;
         }
 
+        public DelegateCommand DeleteElementCommand { get; set; }
+
+        private void OnDeleteElement(object arg)
+        {
+            foreach(var element in elementsForDelete)
+            {
+                plt.Remove(element);
+            }
+            Plot.Refresh();
+        }
+
+        private bool CanDeleteElement(object arg)
+        {
+            return elementsForDelete.Any();
+        }
+
         #endregion
 
         #region plot
@@ -686,10 +710,35 @@ namespace Synapse.Crypto.Patterns
             ch.VerticalLine.LabelBorderWidth = 1;
             ch.VerticalLine.LabelBorderColor = ScottPlot.Color.FromColor(System.Drawing.Color.Gray);
             ch.VerticalLine.LabelBackgroundColor = ScottPlot.Color.FromColor(System.Drawing.Color.LightGray);
+            ch.VerticalLine.LabelFontSize = 11;
+            ch.VerticalLine.LabelPadding = 2;
+            ch.VerticalLine.LabelOffsetY = 3;
+            ch.VerticalLine.LinePattern = LinePattern.DenselyDashed;
+            ch.VerticalLine.LineColor = ScottPlot.Colors.CadetBlue;
+            ch.VerticalLine.LineWidth = 0.5F;
+            
 
-            ch.HorizontalLine.LabelOppositeAxis = true;
+            ch.HorizontalLine.LabelOppositeAxis = yaxis.Edge == Edge.Right ? true : false;
+
+            ch.HorizontalLine.LabelBorderColor = ScottPlot.Colors.CadetBlue; 
+            ch.HorizontalLine.LabelFontSize = 11;
+            ch.HorizontalLine.LabelPadding = 1;
+            ch.HorizontalLine.LabelBackgroundColor = ScottPlot.Colors.LightBlue.WithAlpha(200);
+
+            //ch.HorizontalLine.Label.BackgroundColor. = ScottPlot.Colors.LightBlue;
+
+            ch.HorizontalLine.LabelAlignment = Alignment.MiddleRight;
+
+            ch.HorizontalLine.LabelOffsetX = -22;
+            ch.HorizontalLine.LabelOffsetY = 5;
+
             ch.HorizontalLine.LabelRotation = 0;
+
+            ch.HorizontalLine.LinePattern = LinePattern.DenselyDashed;
+            ch.HorizontalLine.LineColor = ScottPlot.Colors.CadetBlue;
+
             ch.HorizontalLine.IsVisible = true;
+
             //ch.VerticalLine.Text = $"{mouseCoordinates.X:N3}";
             //ch.HorizontalLine.Text = $"{mouseCoordinates.Y:N3}";
 
@@ -814,96 +863,83 @@ namespace Synapse.Crypto.Patterns
 
         #region mouse
 
-        private void Plot_MouseMove(object s, System.Windows.Input.MouseEventArgs e)
+        private void Plot_MouseMove(object s, MouseEventArgs e)
         {
-            System.Windows.Point p = e.GetPosition(Plot);
-            Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
-            Coordinates mouseCoords = plt.GetCoordinates(pixel, plt.Axes.Bottom, plt.Axes.Right);
+            Coordinates mouseCoords = GetCoordinates(e);
 
-            if (draggedLine != null)
-            {
-                if (draggedLine is HorizontalLine)
-                {
-                    draggedLine.Y = mouseCoords.Y;
-                    Plot.Refresh();
-                }
-            }
+            MouseEventProcessing("MouseMove", mouseCoords);
 
             if (CrosshairOn)
-                CrosshairMove(pixel);
+                CrosshairMove(mouseCoords);
 
         }
 
-        private void Plot_MouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Plot_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             // selectedCandle = GetCandleFromMousePosition(e);
+            //Coordinates mouseCoords = GetCoordinates(e);
         }
 
-        private void Plot_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Plot_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            //Coordinates mouseCoords = GetCoordinates(e);
             // SelectedCandle = GetCandleFromMousePosition(e); // выбирает свечу при помощи щелчка правой кнопкой
         }
 
-        private void Plot_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Plot_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            System.Windows.Point p = e.GetPosition(Plot);
-            Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
-            Coordinates mouseCoords = plt.GetCoordinates(pixel, plt.Axes.Bottom, plt.Axes.Right);
-            //SelectCandle(mouseCoords);
+            Coordinates mouseCoords = GetCoordinates(e);
+            //e.Handled = SelectCandle(mouseCoords);
         }
 
-        private void Plot_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Plot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            System.Windows.Point p = e.GetPosition(Plot);
-            Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
-            Coordinates mouseCoords = plt.GetCoordinates(pixel, plt.Axes.Bottom, plt.Axes.Right);
+            Coordinates mouseCoords = GetCoordinates(e);
+            MouseEventProcessing("MouseLeftButtonDown", mouseCoords);
+          
+
+            //if (draggedLine is null)
+            //    Plot.Cursor = Cursors.Arrow;
+            //else if (draggedLine is HorizontalLine)
+            //{
+            //    Plot.UserInputProcessor.IsEnabled = true;
+            //    Plot.Cursor = Cursors.SizeNS;
+            //    e.Handled = true;
+            //}
+        }
+
+        private void Plot_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            Coordinates mouseCoords = GetCoordinates(e);
 
             if (IsSlope)
             {
-                CoordinateLine line = new(mouseCoords, new Coordinates(mouseCoords.X * 1.01, mouseCoords.Y));
-                interactiveSegment = plt.Add.InteractiveLineSegment(line);
-                interactiveSegment.Axes.YAxis = yaxis;
-
-                interactiveLine = plt.Add.InteractiveHorizontalLine(mouseCoords.Y - 50);
-                interactiveLine.Axes.YAxis = yaxis;
-
+                var offset = TimeSpan.FromMinutes(30).ToOADate();
+                CoordinateLine line = new(mouseCoords, new Coordinates(mouseCoords.X + offset, mouseCoords.Y));
+                interactiveLine = new(plt, line);
                 IsSlope = false;
-
                 Plot.Refresh();
             }
 
             //SelectCandle(mouseCoords);
         }
 
-        private void Plot_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Plot_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            System.Windows.Point p = e.GetPosition(Plot);
-            Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
-            Coordinates mouseCoords = plt.GetCoordinates(pixel, plt.Axes.Bottom, plt.Axes.Right);
+            Coordinates mouseCoords = GetCoordinates(e);
 
             //ResetPreviousSelection();
 
             // Важно: убедитесь, что на графике используется DateTimeTicksBottom для отображения времени
             // WpfPlot1.Plot.Axes.DateTimeTicksBottom(); // Используйте, если не делали этого ранее
 
-
-        }
-
-        private void Plot_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            System.Windows.Point p = e.GetPosition(Plot);
-            Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
-            Coordinates mouseCoords = plt.GetCoordinates(pixel, plt.Axes.Bottom, plt.Axes.Right);
-            //e.Handled = SelectCandle(mouseCoords);
         }
 
         private void Plot_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            System.Windows.Point p = e.GetPosition(Plot);
-            Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
-            Coordinates mouseCoords = plt.GetCoordinates(pixel, plt.Axes.Bottom, plt.Axes.Right);
+            Coordinates mouseCoords = GetCoordinates(e);
 
-            var lines = plt.GetPlottables().OfType<HorizontalLine>().Where(l => l.IsDraggable);
+            //var lines = plt.GetPlottables().OfType<HorizontalLine>().Where(l => l.IsDraggable);
 
             //foreach (var line in lines)
             //{
@@ -931,6 +967,8 @@ namespace Synapse.Crypto.Patterns
 
         private void Plot_MouseUp(object sender, MouseButtonEventArgs e)
         {
+            //Coordinates mouseCoords = GetCoordinates(e);
+
             //if (draggedLine != null)
             //{
             //    if (draggedLine.Text == "Take")
@@ -950,14 +988,90 @@ namespace Synapse.Crypto.Patterns
             //}
         }
 
+        private void MouseEventProcessing(string evnt, Coordinates mouseCoords)
+        {
+            var plottables = plt.GetPlottables();
 
-        // возвращает свечу, на которую указывает курсор мыши
-        private Candle GetCandleFromMousePosition(System.Windows.Input.MouseEventArgs e)
+            foreach (var item in plottables)
+            {
+                if (item is IHasInteractiveHandles)
+                {
+                    if (item is InteractiveLineSegment)
+                    {
+                        // Check if the cursor is over the line
+
+                        var segment = item as InteractiveLineSegment;
+
+                        if (interactiveLine.Segment.Equals(segment))
+                        {
+
+                            if (evnt == "MouseMove")
+                            {
+                                interactiveLine.MouseMove(mouseCoords);
+                            }
+                            else if (evnt == "MouseLeftButtonDown")
+                            {
+                                interactiveLine.MouseLeftButtonDown(mouseCoords);
+                            }
+
+                        }
+
+                        //bool mouseover = segment.Line.IsMouseOver(mouseCoords);    
+
+                        //if (mouseover)
+                        //{
+                        //    if(!segment.StartMarkerStyle.IsVisible)
+                        //        segment.StartMarkerStyle.IsVisible = true;
+
+                        //    if (!segment.EndMarkerStyle.IsVisible)
+                        //        segment.EndMarkerStyle.IsVisible = true;
+
+                        //}
+                        //else
+                        //{
+                        //    segment.StartMarkerStyle.IsVisible = false;
+                        //    segment.EndMarkerStyle.IsVisible = false;
+                        //}
+
+                    }
+                    else if (item is InteractiveHorizontalLine)
+                    {
+                        //TODO
+                    }
+                }
+
+                //    // Если курсор достаточно близко к линии по оси Y, "захватываем" её
+
+                //    if (line.Grab(mouseCoords.Y) < grabVrange)
+                //    {
+                //        draggedLine = line;
+                //        break;
+            }
+
+            Plot.Refresh();
+        }
+
+        private Coordinates GetCoordinates(MouseButtonEventArgs e)
         {
             System.Windows.Point p = e.GetPosition(Plot);
-            Pixel mousePixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
-            Coordinates coordinates = plt.GetCoordinates(mousePixel, plt.Axes.Bottom, plt.Axes.Right);
-            var tm = DateTime.FromOADate(coordinates.X).Round(TimeSpan.FromMinutes((int)TimeFrame));
+            Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
+
+            return plt.GetCoordinates(pixel, plt.Axes.Bottom, yaxis);
+        }
+
+        private Coordinates GetCoordinates(MouseEventArgs e)
+        {
+            System.Windows.Point p = e.GetPosition(Plot);
+            Pixel pixel = new(p.X * Plot.DisplayScale, p.Y * Plot.DisplayScale);
+            return plt.GetCoordinates(pixel, plt.Axes.Bottom, yaxis);
+        }
+
+        // возвращает свечу, на которую указывает курсор мыши
+        private Candle GetCandleFromMousePosition(MouseEventArgs e)
+        {
+            Coordinates mouseCoords = GetCoordinates(e);
+           
+            var tm = DateTime.FromOADate(mouseCoords.X).Round(TimeSpan.FromMinutes((int)TimeFrame));
 
             Candle candle;
 
@@ -1162,16 +1276,32 @@ namespace Synapse.Crypto.Patterns
         // перемещение перекрестья
         private void CrosshairMove(Pixel mousePixel)
         {
-            Coordinates coordinates = plt.GetCoordinates(mousePixel, plt.Axes.Bottom, plt.Axes.Right);
+            Coordinates coordinates = plt.GetCoordinates(mousePixel, plt.Axes.Bottom, yaxis);
             ch.Position = coordinates;
             var tm = DateTime.FromOADate(ch.Position.X).Round(TimeSpan.FromMinutes((int)TimeFrame));
             ch.VerticalLine.LabelText = $"{tm:HH:mm}";
             var fmt = "{0:F" + security.PriceScale + "}";
             ch.HorizontalLine.LabelText = string.Format(fmt, ch.Position.Y);
+            
             CrosshairCandle = candles.FirstOrDefault(c => c.OpenTime == tm);
             CandleViewModel.Candle = CrosshairCandle;
             Plot.Refresh();
         }
+
+        private void CrosshairMove(Coordinates coordinates)
+        {
+            //Coordinates coordinates = plt.GetCoordinates(mousePixel, plt.Axes.Bottom, yaxis);
+            ch.Position = coordinates;
+            var tm = DateTime.FromOADate(ch.Position.X).Round(TimeSpan.FromMinutes((int)TimeFrame));
+            ch.VerticalLine.LabelText = $"{tm:HH:mm}";
+            var fmt = "{0:F" + security.PriceScale + "}";
+            ch.HorizontalLine.LabelText = string.Format(fmt, ch.Position.Y);
+
+            CrosshairCandle = candles.FirstOrDefault(c => c.OpenTime == tm);
+            CandleViewModel.Candle = CrosshairCandle;
+            Plot.Refresh();
+        }
+
 
         #endregion
 
@@ -1240,13 +1370,16 @@ namespace Synapse.Crypto.Patterns
 
             Plot.MouseRightButtonDown += Plot_MouseRightButtonDown;
             Plot.MouseRightButtonUp += Plot_MouseRightButtonUp;
-            Plot.MouseMove += Plot_MouseMove;
-            Plot.MouseDoubleClick += Plot_MouseDoubleClick;
+
+            Plot.PreviewMouseLeftButtonDown += Plot_PreviewMouseLeftButtonDown;
             Plot.MouseLeftButtonDown += Plot_MouseLeftButtonDown;
             Plot.MouseLeftButtonUp += Plot_MouseLeftButtonUp;
-            Plot.PreviewMouseLeftButtonDown += Plot_PreviewMouseLeftButtonDown;
+            
             Plot.MouseDown += Plot_MouseDown;
             Plot.MouseUp += Plot_MouseUp;
+
+            Plot.MouseMove += Plot_MouseMove;
+            Plot.MouseDoubleClick += Plot_MouseDoubleClick;
 
             plt.Grid.YAxis = yaxis;
 

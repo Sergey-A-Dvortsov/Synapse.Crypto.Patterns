@@ -13,6 +13,7 @@ using MathNet.Numerics.Statistics;
 using ScottPlot.Plottables;
 using Synapse.General;
 using Synapse.Crypto.Trading;
+using ScottPlot.Plottables.Interactive;
 
 namespace Synapse.Crypto.Patterns
 {
@@ -567,6 +568,28 @@ namespace Synapse.Crypto.Patterns
         public static TimeSpan ToTimeSpan(this RangeIntervals interval)
         {
             return TimeSpan.FromDays((int)interval);
+        }
+
+        /// <summary>
+        /// Determines whether the mouse cursor is over a visual element (line)
+        /// </summary>
+        /// <param name="line"></param>
+        /// <param name="mouseCoords"></param>
+        /// <param name="hitArea"></param>
+        /// <returns></returns>
+        public static bool IsMouseOver(this CoordinateLine line, Coordinates mouseCoords, double hitArea = 0.002)
+        {
+            var box = line.BoundingBox(); // rectangle in which the line is inscribed
+
+            bool insidebox = box.Contains(mouseCoords); // whether the cursor coordinates are inside the rectangle
+
+            if (!insidebox) return false;  
+
+            var lineY = line.Y(mouseCoords.X); // line's Y to X current cursor position
+
+            var rng = new Range<double>(lineY, hitArea, true);
+
+            return rng.Contains(mouseCoords.Y);
         }
 
         #region testing
