@@ -1,4 +1,5 @@
-﻿using NUnit.Framework.Internal.Execution;
+﻿using MathNet.Numerics;
+using NUnit.Framework.Internal.Execution;
 using ScottPlot;
 using ScottPlot.Interactivity;
 using ScottPlot.Plottables;
@@ -50,6 +51,8 @@ namespace Synapse.Crypto.Patterns
         public const string RANGEBREAK = "Пробой диапазона";
         public const string SLOPEBREAK = "Пробой наклонной";
 
+        private const double SNAP_Y_THRESHOLD = 0.005; 
+
         private AppRoot root = AppRoot.GetInstance();
         private readonly BybitSecurity security;
         private List<Candle> candles;
@@ -76,7 +79,7 @@ namespace Synapse.Crypto.Patterns
         private HorizontalLine? stopLine; // нижняя линия диапазона
 
         private HorizontalLine draggedLine; // вспомогательные объект для отслеживания перетаскивания
-        private double grabVrange = 0.02;   // зона захвата по вертикальной координате.
+        private double grabVrange = 0.01;   // зона захвата по вертикальной координате.
                                             // Захват возникает, если разность между вертикальными координатами курсора и объекта меньше 0.01%
 
         private InteractiveLineSegment interactiveSegment;
@@ -1066,7 +1069,75 @@ namespace Synapse.Crypto.Patterns
             return plt.GetCoordinates(pixel, plt.Axes.Bottom, yaxis);
         }
 
-        // возвращает свечу, на которую указывает курсор мыши
+        private Coordinates GetSnappedPoint(Coordinates mouseCoord)
+        {
+            if (oHLCs == null || oHLCs.Count == 0) return mouseCoord;
+
+            double mouseX = mouseCoord.X;
+            double mouseY = mouseCoord.Y;
+
+            // Бинарный поиск ближайшей свечи по X (всегда ищем ближайшую, без порога по X)
+            int left = 0;
+            int right = oHLCs.Count - 1;
+            while (left <= right)
+            {
+                int mid = left + (right - left) / 2;
+                double midX = oHLCs[mid].DateTime.ToOADate();
+                if (midX == mouseX) return TrySnapToExtremum(oHLCs[mid], midX, mouseY);
+                if (midX < mouseX) left = mid + 1;
+                else right = mid - 1;
+            }
+
+            // Выбираем ближайшую из двух кандидатов (left и right)
+            OHLC? closest = null;
+            double minDiffX = double.MaxValue;
+
+            if (left < oHLCs.Count)
+            {
+                double diff = Math.Abs(oHLCs[left].DateTime.ToOADate() - mouseX);
+                if (diff < minDiffX) { minDiffX = diff; closest = oHLCs[left]; }
+            }
+
+            if (right >= 0)
+            {
+                double diff = Math.Abs(oHLCs[right].DateTime.ToOADate() - mouseX);
+                if (diff < minDiffX) { minDiffX = diff; closest = oHLCs[right]; }
+            }
+
+            if (closest == null)
+                return mouseCoord;
+
+            double candleX = closest.Value.DateTime.ToOADate();
+
+            // Пытаемся прилипнуть к high или low только если Y в пределах порога
+            return TrySnapToExtremum(closest.Value, candleX, mouseY);
+        }
+
+        private Coordinates TrySnapToExtremum(OHLC candle, double candleX, double mouseY)
+        {
+            double high = candle.High;
+            double low = candle.Low;
+
+            double distToHigh = Math.Abs(high / mouseY - 1);
+            double distToLow = Math.Abs(low / mouseY - 1);
+
+           // Фиксированный порог в единицах цены
+            if (distToHigh <= SNAP_Y_THRESHOLD)
+            {
+                return new Coordinates(candleX, high);
+            }
+
+            if (distToLow <= SNAP_Y_THRESHOLD)
+            {
+                return new Coordinates(candleX, low);
+            }
+
+            //Если ни high, ни low не попали в порог → возвращаем точные координаты мыши
+            //(X остаётся привязанным к свече, Y — где курсор)
+            return new Coordinates(candleX, mouseY);
+        }
+          
+       // возвращает свечу, на которую указывает курсор мыши
         private Candle GetCandleFromMousePosition(MouseEventArgs e)
         {
             Coordinates mouseCoords = GetCoordinates(e);
@@ -1495,3 +1566,172 @@ namespace Synapse.Crypto.Patterns
 //var menuButton = StandardMouseButtons.Right;
 //var menuResponse = new ScottPlot.Interactivity.UserActionResponses.SingleClickContextMenu(menuButton);
 //myPlot.UserInputProcessor.UserActionResponses.Add(menuResponse);
+
+
+//public partial class Form1 : Form
+//{
+//    private readonly Plot plot = new Plot();
+//    private readonly FormsPlot formsPlot;
+//    private List<OHLC> candles; // предполагаем отсортированы по DateStart ascending
+//    private LinePlot trendLine;
+//    private Coordinates? startPoint;
+//    private bool isDrawing = false;
+
+//    // === Настраиваемый порог snapping только по Y ===
+//    private const double SNAP_Y_THRESHOLD_PRICE = 5.0;      // макс. расстояние по Y в единицах цены
+//    // private const double SNAP_Y_THRESHOLD_PERCENT = 2.0; // альтернативно — в % от диапазона свечи
+
+//    public Form1()
+//    {
+//        InitializeComponent();
+
+//        formsPlot = new FormsPlot { Dock = DockStyle.Fill };
+//        Controls.Add(formsPlot);
+//        formsPlot.Plot = plot;
+
+//        candles = GenerateRandomCandles(30);
+//        plot.Add.Candlesticks(candles);
+//        plot.Axes.DateTimeTicksBottom();
+
+//        trendLine = plot.Add.Line(0, 0, 0, 0);
+//        trendLine.Color = Colors.Red;
+//        trendLine.Width = 2;
+//        trendLine.IsVisible = false;
+
+//        formsPlot.MouseDown += OnMouseDown;
+//        formsPlot.MouseMove += OnMouseMove;
+//        formsPlot.Refresh();
+//    }
+
+//    private List<OHLC> GenerateRandomCandles(int count)
+//    {
+//        var rnd = new Random();
+//        var list = new List<OHLC>(count);
+//        DateTime startDate = DateTime.Today;
+//        for (int i = 0; i < count; i++)
+//        {
+//            double open = 100 + rnd.NextDouble() * 10;
+//            double close = 100 + rnd.NextDouble() * 10;
+//            double high = Math.Max(open, close) + rnd.NextDouble() * 5;
+//            double low = Math.Min(open, close) - rnd.NextDouble() * 5;
+//            list.Add(new OHLC(open, high, low, close, startDate.AddDays(i), TimeSpan.FromDays(1)));
+//        }
+//        return list;
+//    }
+
+//    private Coordinates GetSnappedPoint(Coordinates mouseCoord)
+//    {
+//        if (candles == null || candles.Count == 0)
+//            return mouseCoord;
+
+//        double mouseX = mouseCoord.X;
+//        double mouseY = mouseCoord.Y;
+
+//        // Бинарный поиск ближайшей свечи по X (всегда ищем ближайшую, без порога по X)
+//        int left = 0;
+//        int right = candles.Count - 1;
+//        while (left <= right)
+//        {
+//            int mid = left + (right - left) / 2;
+//            double midX = candles[mid].DateStart.ToOADate();
+//            if (midX == mouseX) return TrySnapToExtremum(candles[mid], midX, mouseY);
+//            if (midX < mouseX) left = mid + 1;
+//            else right = mid - 1;
+//        }
+
+//        // Выбираем ближайшую из двух кандидатов (left и right)
+//        OHLC? closest = null;
+//        double minDiffX = double.MaxValue;
+
+//        if (left < candles.Count)
+//        {
+//            double diff = Math.Abs(candles[left].DateStart.ToOADate() - mouseX);
+//            if (diff < minDiffX) { minDiffX = diff; closest = candles[left]; }
+//        }
+
+//        if (right >= 0)
+//        {
+//            double diff = Math.Abs(candles[right].DateStart.ToOADate() - mouseX);
+//            if (diff < minDiffX) { minDiffX = diff; closest = candles[right]; }
+//        }
+
+//        if (closest == null)
+//            return mouseCoord;
+
+//        double candleX = closest.Value.DateStart.ToOADate();
+
+//        // Пытаемся прилипнуть к high или low только если Y в пределах порога
+//        return TrySnapToExtremum(closest.Value, candleX, mouseY);
+//    }
+
+//    private Coordinates TrySnapToExtremum(OHLC candle, double candleX, double mouseY)
+//    {
+//        double high = candle.High;
+//        double low = candle.Low;
+
+//        double distToHigh = Math.Abs(high - mouseY);
+//        double distToLow = Math.Abs(low - mouseY);
+
+//        // Фиксированный порог в единицах цены
+//        if (distToHigh <= SNAP_Y_THRESHOLD_PRICE)
+//        {
+//            return new Coordinates(candleX, high);
+//        }
+
+//        if (distToLow <= SNAP_Y_THRESHOLD_PRICE)
+//        {
+//            return new Coordinates(candleX, low);
+//        }
+
+//        // Альтернатива: порог в процентах от диапазона свечи (раскомментировать при необходимости)
+//        // double candleRange = high - low;
+//        // if (candleRange > 0)
+//        // {
+//        //     double relThreshold = candleRange * (SNAP_Y_THRESHOLD_PERCENT / 100.0);
+//        //     if (distToHigh <= relThreshold) return new Coordinates(candleX, high);
+//        //     if (distToLow  <= relThreshold) return new Coordinates(candleX, low);
+//        // }
+
+//        // Если ни high, ни low не попали в порог → возвращаем точные координаты мыши
+//        // (X остаётся привязанным к свече, Y — где курсор)
+//        return new Coordinates(candleX, mouseY);
+//    }
+
+//    private void OnMouseDown(object? sender, MouseEventArgs e)
+//    {
+//        if (e.Button != MouseButtons.Left) return;
+
+//        Coordinates mouseCoord = formsPlot.Plot.GetCoordinate(e.Location);
+
+//        if (!isDrawing)
+//        {
+//            startPoint = GetSnappedPoint(mouseCoord);
+//            isDrawing = true;
+//            trendLine.IsVisible = true;
+//        }
+//        else
+//        {
+//            Coordinates endPoint = GetSnappedPoint(mouseCoord);
+//            UpdateTrendLine(startPoint.Value, endPoint);
+//            isDrawing = false;
+//        }
+
+//        formsPlot.Refresh();
+//    }
+
+//    private void OnMouseMove(object? sender, MouseEventArgs e)
+//    {
+//        if (!isDrawing || startPoint == null) return;
+
+//        Coordinates mouseCoord = formsPlot.Plot.GetCoordinate(e.Location);
+//        Coordinates endPoint = GetSnappedPoint(mouseCoord);
+//        UpdateTrendLine(startPoint.Value, endPoint);
+//        formsPlot.Refresh();
+//    }
+
+//    private void UpdateTrendLine(Coordinates start, Coordinates end)
+//    {
+//        trendLine.Start = start;
+//        trendLine.End = end;
+//    }
+//}
