@@ -1,4 +1,5 @@
-﻿using ScottPlot;
+﻿using NUnit.Framework.Internal.Execution;
+using ScottPlot;
 using ScottPlot.Plottables.Interactive;
 using Synapse.General;
 using System;
@@ -6,23 +7,49 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Shapes;
 
 namespace Synapse.Crypto.Patterns
 {
-    public class InteractiveLine
+    public class InteractiveLine : IDisposable  
     {
 
+        private SimulatorViewModel parent;
         private Plot plot;
-
-        public InteractiveLine(Plot plot, CoordinateLine line)
+  
+        public InteractiveLine(CoordinateLine line)
         {
-            this.plot = plot;
+            parent = SimulatorViewModel.Instance;
+            plot = parent.Plot.Plot;
+
+            plot?.HandleHoverChanged += OnHandleHoverChanged;
+            plot?.HandleMoved += OnHandleMoved;
+            plot?.HandlePressed += OnHandlePressed;
+            plot?.HandleReleased += OnHandleReleased;
+
             Segment = plot.Add.InteractiveLineSegment(line);
+
+        }
+
+
+        public void Dispose()
+        {
+            plot.Remove(Segment);
+            plot?.HandleHoverChanged -= OnHandleHoverChanged;
+            plot?.HandleMoved -= OnHandleMoved;
+            plot?.HandlePressed -= OnHandlePressed;
+            plot?.HandleReleased -= OnHandleReleased;
+
         }
 
         public InteractiveLineSegment Segment { get; }
 
         private double hitArea = 0.002;
+
+        /// <summary>
+        /// Enable/disable the sticking to candlestick extremes mode
+        /// </summary>
+        public bool SnappedMode { get; set; } = true;
 
         public bool IsSelected { get; private set; }
 
@@ -64,6 +91,11 @@ namespace Synapse.Crypto.Patterns
             }
         }
 
+        public void MouseLeftButtonUp(Coordinates mouseCoords)
+        {
+            //TODO
+        }
+
         /// <summary>
         /// Determines whether the mouse cursor is over a line.
         /// </summary>
@@ -83,6 +115,7 @@ namespace Synapse.Crypto.Patterns
             CoordinateRange rngY = new(lineY - (lineY * hitArea), hitArea + (lineY * hitArea));
 
             if (rngY.Contains(mouseCoords.Y)) return true;
+
 
             return IsMouseOverStartHandle(mouseCoords) || IsMouseOverEndHandle(mouseCoords);
 
@@ -112,7 +145,32 @@ namespace Synapse.Crypto.Patterns
             return rect.Contains(mouseCoords);
         }
 
+        #region InteractiveHandle handlers
+
+        private void OnHandleHoverChanged(object? sender, InteractiveHandle? e)
+        {
+            if(e  == null || e.Parent != Segment ) return;
+        }
+
+        private void OnHandleMoved(object? sender, InteractiveHandle? e)
+        {
+            if (e == null || e.Parent != Segment) return;
+        }
+
+        private void OnHandlePressed(object? sender, InteractiveHandle? e)
+        {
+            if (e == null || e.Parent != Segment) return;
+        }
+
+        private void OnHandleReleased(object? sender, InteractiveHandle? e)
+        {
+            if (e == null || e.Parent != Segment) return;
+        }
+
+        #endregion
+
     }
 
-
 }
+
+///var handles = line.GetHandles(); // метод из IHasInteractiveHandles

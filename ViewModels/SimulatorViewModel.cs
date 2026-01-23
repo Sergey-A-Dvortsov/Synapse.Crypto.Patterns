@@ -46,6 +46,8 @@ namespace Synapse.Crypto.Patterns
 
     public class SimulatorViewModel : BaseViewModel
     {
+       
+
         public const string NEXTBAR = "Следующий бар";
         public const string TS = "Тейк/стоп";
         public const string RANGEBREAK = "Пробой диапазона";
@@ -59,7 +61,7 @@ namespace Synapse.Crypto.Patterns
         private List<Candle> displaycandles;
         //private List<Candle> selectedCandles = [];
 
-        private WpfPlot Plot { get; }
+       
         private readonly Plot plt;
         private CandlestickPlot? cndlPlot;
         private List<OHLC>? oHLCs;
@@ -125,9 +127,14 @@ namespace Synapse.Crypto.Patterns
 
             yaxis = yedge == Edge.Left ? plt.Axes.Left : plt.Axes.Right;
 
+            Instance = this;
             // plt.Add.InteractiveHorizontalLine(4);
 
         }
+
+        public static SimulatorViewModel Instance { get; private set; }
+
+         public WpfPlot Plot { get; }
 
         public CandleViewModel CandleViewModel { private set; get; } = new CandleViewModel();
 
@@ -919,7 +926,7 @@ namespace Synapse.Crypto.Patterns
             {
                 var offset = TimeSpan.FromMinutes(30).ToOADate();
                 CoordinateLine line = new(mouseCoords, new Coordinates(mouseCoords.X + offset, mouseCoords.Y));
-                interactiveLine = new(plt, line);
+                interactiveLine = new(line);
                 IsSlope = false;
                 Plot.Refresh();
             }
@@ -1372,7 +1379,6 @@ namespace Synapse.Crypto.Patterns
             CandleViewModel.Candle = CrosshairCandle;
             Plot.Refresh();
         }
-
 
         #endregion
 
