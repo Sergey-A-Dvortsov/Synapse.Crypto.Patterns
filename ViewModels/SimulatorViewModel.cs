@@ -90,6 +90,8 @@ namespace Synapse.Crypto.Patterns
 
         private InteractiveHorizontalLine interactiveHLine;
 
+        private TrendLine trendLine;
+
         //WpfPlot1.Plot.Add.InteractiveHorizontalLineSegment(x1, x2, y);
 
         //  private InteractiveHorizontalLineSegment takeLine
@@ -879,6 +881,9 @@ namespace Synapse.Crypto.Patterns
 
             MouseEventProcessing("MouseMove", mouseCoords);
 
+            if (trendLine != null)
+               trendLine.MouseMove(mouseCoords);
+
             if (CrosshairOn)
                 CrosshairMove(mouseCoords);
 
@@ -905,7 +910,11 @@ namespace Synapse.Crypto.Patterns
         private void Plot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             Coordinates mouseCoords = GetCoordinates(e);
-            MouseEventProcessing("MouseLeftButtonDown", mouseCoords);
+
+            if (trendLine != null)
+                trendLine.MouseLeftButtonDown(mouseCoords);
+
+            //MouseEventProcessing("MouseLeftButtonDown", mouseCoords);
           
 
             //if (draggedLine is null)
@@ -926,7 +935,8 @@ namespace Synapse.Crypto.Patterns
             {
                 var offset = TimeSpan.FromMinutes(30).ToOADate();
                 CoordinateLine line = new(mouseCoords, new Coordinates(mouseCoords.X + offset, mouseCoords.Y));
-                interactiveLine = new(line);
+                //interactiveLine = new(line);
+                trendLine = new(line);
                 IsSlope = false;
                 Plot.Refresh();
             }
@@ -1060,6 +1070,8 @@ namespace Synapse.Crypto.Patterns
 
             Plot.Refresh();
         }
+
+
 
         private Coordinates GetCoordinates(MouseButtonEventArgs e)
         {
