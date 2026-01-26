@@ -879,7 +879,7 @@ namespace Synapse.Crypto.Patterns
         {
             Coordinates mouseCoords = GetCoordinates(e);
 
-            MouseEventProcessing("MouseMove", mouseCoords);
+            //MouseEventProcessing("MouseMove", mouseCoords);
 
             if (trendLine != null)
                trendLine.MouseMove(mouseCoords);
@@ -1088,7 +1088,7 @@ namespace Synapse.Crypto.Patterns
             return plt.GetCoordinates(pixel, plt.Axes.Bottom, yaxis);
         }
 
-        private Coordinates GetSnappedPoint(Coordinates mouseCoord)
+        public Coordinates GetSnappedPoint(Coordinates mouseCoord)
         {
             if (oHLCs == null || oHLCs.Count == 0) return mouseCoord;
 
