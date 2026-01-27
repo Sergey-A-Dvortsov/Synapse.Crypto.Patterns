@@ -12,13 +12,24 @@ using System.Windows.Shapes;
 
 namespace Synapse.Crypto.Patterns
 {
-    public class InteractiveLine : IDisposable
+    public interface IInteractiveLine : IDisposable
+    {
+        public bool SnappedMode { get; set; }
+        public bool IsSelected { get; }
+        public void MouseMove(Coordinates mouseCoords);
+        public void MouseLeftButtonDown(Coordinates mouseCoords);
+        public void MouseLeftButtonUp(Coordinates mouseCoords);
+        public bool IsMouseOver(Coordinates mouseCoords);
+        public void Remove();
+    }
+
+    public class Interactiveine : IDisposable
     {
 
         private SimulatorViewModel parent;
         private Plot plot;
 
-        public InteractiveLine(CoordinateLine line)
+        public Interactiveine(CoordinateLine line)
         {
             parent = SimulatorViewModel.Instance;
             plot = parent.Plot.Plot;
@@ -172,7 +183,7 @@ namespace Synapse.Crypto.Patterns
 
     }
 
-    public class TrendLine : InteractiveLineSegment
+    public class TrendLine : InteractiveLineSegment, IInteractiveLine
     {
 
         private class Handle
@@ -212,6 +223,11 @@ namespace Synapse.Crypto.Patterns
             handles = new() { 
                 { 0, new Handle() { MarkerStyle = StartMarkerStyle } }, 
                 { 1, new Handle() { MarkerStyle = EndMarkerStyle } } };
+        }
+
+        public void Dispose()
+        {
+           // throw new NotImplementedException();
         }
 
         /// <summary>
@@ -465,6 +481,8 @@ namespace Synapse.Crypto.Patterns
             // Fallback to original line if something went wrong
             return line;
         }
+
+      
 
         #endregion
 
