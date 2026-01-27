@@ -198,7 +198,7 @@ namespace Synapse.Crypto.Patterns
 
         private SimulatorViewModel parent;
         private Plot plot;
-        private double hitArea = 0.002;
+        private double hitArea = 0.003;
         private Dictionary<int, Handle> handles;
         private Coordinates lastMouseCoords;
 
@@ -223,12 +223,12 @@ namespace Synapse.Crypto.Patterns
 
         public bool ExtendInBoth { get; set; } = false;
 
-
         public void Remove()
         {
             plot.Remove(this);
         }
 
+        #region on mouse actions
 
         public void MouseMove(Coordinates mouseCoords)
         {
@@ -335,37 +335,51 @@ namespace Synapse.Crypto.Patterns
             return rect.Contains(mouseCoords);
         }
 
+        #endregion
 
         #region override parrent's methods
 
         public override void PressHandle(InteractiveHandle handle)
         {
-            var d = 4;
+            if (!SnappedMode) return;
         }
 
         public override void ReleaseHandle(InteractiveHandle handle)
         {
-            if(!IsMouseOverSnappedHandle(lastMouseCoords, handle))
+            if (!SnappedMode) return;
+
+            if (handles[handle.Index].IsSnaped)
             {
-                handles[handle.Index].Release(LineStyle.Color);
+                base.MoveHandle(handle, handles[handle.Index].Coordinates);
             }
+
         }
 
         public override void MoveHandle(InteractiveHandle handle, Coordinates point)
         {
             base.MoveHandle(handle, point);
-            var snappedPoint = parent.GetSnappedPoint(point);
-            if (snappedPoint.Equals(point)) return;
+            lastMouseCoords = point;
 
-            if(!handles[handle.Index].IsSnaped || !handles[handle.Index].Coordinates.Equals(snappedPoint))
+            if (!SnappedMode) return;
+
+            var snappedPoint = parent.GetSnappedPoint(point);
+
+            if (snappedPoint == null)
             {
-                base.MoveHandle(handle, snappedPoint);
-                handles[handle.Index].Snapped(snappedPoint);
-                lastMouseCoords = snappedPoint;
+                if (handles[handle.Index].IsSnaped)
+                {
+                    handles[handle.Index].Release(LineStyle.Color);
+                }
             }
-            else
+            else 
             {
-                lastMouseCoords = point;
+                if (!handles[handle.Index].IsSnaped || !handles[handle.Index].Coordinates.Equals(snappedPoint))
+                {
+                    base.MoveHandle(handle, snappedPoint.Value);
+                    lastMouseCoords = snappedPoint.Value;
+                }
+
+                handles[handle.Index].Snapped(snappedPoint.Value);
             }
             
         }
@@ -454,96 +468,10 @@ namespace Synapse.Crypto.Patterns
 
         #endregion
 
-        #region InteractiveHandle handlers
-
-        //private void OnHandleHoverChanged(object? sender, InteractiveHandle? e)
-        //{
-        //    if(e  == null || e.Parent != Segment ) return;
-        //}
-
-        //private void OnHandleMoved(object? sender, InteractiveHandle? e)
-        //{
-        //    if (e == null || e.Parent != Segment) return;
-        //}
-
-        //private void OnHandlePressed(object? sender, InteractiveHandle? e)
-        //{
-        //    if (e == null || e.Parent != Segment) return;
-        //}
-
-        //private void OnHandleReleased(object? sender, InteractiveHandle? e)
-        //{
-        //    if (e == null || e.Parent != Segment) return;
-        //}
-
-        #endregion
-
     }
 
 }
 
-//public virtual void Render(RenderPack rp)
-//{
-//    if (IsVisible == false)
-//        return;
-
-//    PixelLine pxLine = Axes.GetPixelLine(MutableLine.CoordinateLine);
-
-//    // Calculate the slope and extend the line to the edges of the data area
-//    PixelLine extendedLine = ExtendLineToEdges(pxLine, rp.DataRect);
-
-//    LineStyle.Render(rp.Canvas, extendedLine, rp.Paint);
-//    StartMarkerStyle.Render(rp.Canvas, pxLine.Pixel1, rp.Paint);
-//    EndMarkerStyle.Render(rp.Canvas, pxLine.Pixel2, rp.Paint);
-//}
-
-//private PixelLine ExtendLineToEdges(PixelLine line, PixelRect dataRect)
-//{
-//    float dx = line.X2 - line.X1;
-//    float dy = line.Y2 - line.Y1;
-
-//    // Handle vertical line case
-//    if (Math.Abs(dx) < 0.001)
-//        return new PixelLine(line.X1, dataRect.Top, line.X1, dataRect.Bottom);
-
-//    // Handle horizontal line case
-//    if (Math.Abs(dy) < 0.001)
-//        return new PixelLine(dataRect.Left, line.Y1, dataRect.Right, line.Y1);
-
-//    // Calculate slope
-//    float slope = dy / dx;
-
-//    // Calculate y-intercept: y = mx + b -> b = y - mx
-//    float yIntercept = line.Y1 - slope * line.X1;
-
-//    // Calculate intersections with the data rect edges
-//    float leftY = slope * dataRect.Left + yIntercept;
-//    float rightY = slope * dataRect.Right + yIntercept;
-//    float topX = (dataRect.Top - yIntercept) / slope;
-//    float bottomX = (dataRect.Bottom - yIntercept) / slope;
-
-//    // Find which two edges the line intersects
-//    List<Pixel> intersections = new();
-
-//    if (leftY >= dataRect.Top && leftY <= dataRect.Bottom)
-//        intersections.Add(new Pixel(dataRect.Left, leftY));
-
-//    if (rightY >= dataRect.Top && rightY <= dataRect.Bottom)
-//        intersections.Add(new Pixel(dataRect.Right, rightY));
-
-//    if (topX >= dataRect.Left && topX <= dataRect.Right)
-//        intersections.Add(new Pixel(topX, dataRect.Top));
-
-//    if (bottomX >= dataRect.Left && bottomX <= dataRect.Right)
-//        intersections.Add(new Pixel(bottomX, dataRect.Bottom));
-
-//    // Return line between first two intersections
-//    if (intersections.Count >= 2)
-//        return new PixelLine(intersections[0], intersections[1]);
-
-//    // Fallback to original line if something went wrong
-//    return line;
-//}
 
 
-///var handles = line.GetHandles(); // метод из IHasInteractiveHandles
+
