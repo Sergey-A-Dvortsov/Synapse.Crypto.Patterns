@@ -113,15 +113,12 @@
                 <ToggleButton ToolTip="Включить/выключить перекрестье" IsChecked="{Binding CrosshairOn}">
                     <Image Source="/Resources/crosshair_black_32.png" Height="18"/>
                 </ToggleButton>
-
-                <!--<Button Command="{Binding PlotSlopeCommand}" ToolTip="Нарисовать наклонную по двум свечам" >
-                    <Image Source="/Resources/slash_32.png"  Height="18"/>
-                </Button>-->
+                
                 <Separator/>
 
                 <Button Command="{Binding DeleteElementCommand}" ToolTip="Удалить выбранный элемент" >
-                    <Image Source="/Resources/recycling-bin.png"  Height="18"/>
-                </Button>-->
+                    <Image Source="/Resources/recycling-bin.png" Height="18"/>
+                </Button>
 
             </ToolBar>
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">

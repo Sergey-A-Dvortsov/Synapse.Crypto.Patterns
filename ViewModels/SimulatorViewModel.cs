@@ -84,11 +84,16 @@ namespace Synapse.Crypto.Patterns
         private double grabVrange = 0.01;   // зона захвата по вертикальной координате.
                                             // Захват возникает, если разность между вертикальными координатами курсора и объекта меньше 0.01%
 
-        private InteractiveLineSegment interactiveSegment;
+       
+        //private InteractiveLineSegment interactiveSegment;
 
-        private InteractiveLine interactiveLine;
+       // private InteractiveLine interactiveLine;
 
         private InteractiveHorizontalLine interactiveHLine;
+
+        private TrendLine trendLine;
+
+        private List<TrendLine> trendLines = [];
 
         //WpfPlot1.Plot.Add.InteractiveHorizontalLineSegment(x1, x2, y);
 
@@ -116,7 +121,7 @@ namespace Synapse.Crypto.Patterns
             NextCommand = new DelegateCommand(OnNext, CanNext);
             RangeCommand = new DelegateCommand(OnRange, CanRange);
             LinesCommand = new DelegateCommand(OnLines, CanLines);
-            PlotSlopeCommand = new DelegateCommand(OnPlotSlope, CanPlotSlope);
+            //PlotSlopeCommand = new DelegateCommand(OnPlotSlope, CanPlotSlope);
             DeleteElementCommand = new DelegateCommand(OnDeleteElement, CanDeleteElement);
 
             candles = root.Candles[item.Symbol];
@@ -644,46 +649,54 @@ namespace Synapse.Crypto.Patterns
             return true;
         }
 
-        public DelegateCommand PlotSlopeCommand { get; set; }
+        //public DelegateCommand PlotSlopeCommand { get; set; }
 
-        private void OnPlotSlope(object arg)
-        {
-            if (slope == null)
-            {
-                slope = new(selectedCandles[^2].Candle, selectedCandles[^1].Candle);
-                slope.SetMinMax(displaycandles);
-                slope.Line = plt.Add.Line(slope.GetCoordinateLine().GetValueOrDefault());
-                slope.Line.Axes.YAxis = yaxis;
-            }
-            else
-            {
-                plt.Remove(slope.Line);
-                slope = null;
-            }
+        //private void OnPlotSlope(object arg)
+        //{
+        //    if (slope == null)
+        //    {
+        //        slope = new(selectedCandles[^2].Candle, selectedCandles[^1].Candle);
+        //        slope.SetMinMax(displaycandles);
+        //        slope.Line = plt.Add.Line(slope.GetCoordinateLine().GetValueOrDefault());
+        //        slope.Line.Axes.YAxis = yaxis;
+        //    }
+        //    else
+        //    {
+        //        plt.Remove(slope.Line);
+        //        slope = null;
+        //    }
 
-            Plot.Refresh();
+        //    Plot.Refresh();
 
-        }
+        //}
 
-        private bool CanPlotSlope(object arg)
-        {
-            return selectedCandles?.Count > 1 || slope != null;
-        }
+        //private bool CanPlotSlope(object arg)
+        //{
+        //    return selectedCandles?.Count > 1 || slope != null;
+        //}
 
         public DelegateCommand DeleteElementCommand { get; set; }
 
         private void OnDeleteElement(object arg)
         {
-            foreach(var element in elementsForDelete)
+            //foreach(var element in elementsForDelete)
+            //{
+            //    plt.Remove(element);
+            //}
+
+            foreach (var line in trendLines)
             {
-                plt.Remove(element);
+                if(line.IsSelected)
+                    line.Remove();
             }
+
             Plot.Refresh();
         }
 
         private bool CanDeleteElement(object arg)
         {
-            return elementsForDelete.Any();
+            bool issel = trendLines.Any(l => l.IsSelected);
+            return issel;
         }
 
         #endregion
@@ -877,7 +890,15 @@ namespace Synapse.Crypto.Patterns
         {
             Coordinates mouseCoords = GetCoordinates(e);
 
-            MouseEventProcessing("MouseMove", mouseCoords);
+            //MouseEventProcessing("MouseMove", mouseCoords);
+
+            //if (trendLine != null)
+            //   trendLine.MouseMove(mouseCoords);
+
+            foreach(var line in trendLines)
+            {
+                line.MouseMove(mouseCoords);
+            }
 
             if (CrosshairOn)
                 CrosshairMove(mouseCoords);
@@ -905,8 +926,17 @@ namespace Synapse.Crypto.Patterns
         private void Plot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             Coordinates mouseCoords = GetCoordinates(e);
-            MouseEventProcessing("MouseLeftButtonDown", mouseCoords);
-          
+
+            //if (trendLine != null)
+            //    trendLine.MouseLeftButtonDown(mouseCoords);
+
+            foreach (var line in trendLines)
+            {
+                line.MouseLeftButtonDown(mouseCoords);
+            }
+
+            //MouseEventProcessing("MouseLeftButtonDown", mouseCoords);
+
 
             //if (draggedLine is null)
             //    Plot.Cursor = Cursors.Arrow;
@@ -924,9 +954,10 @@ namespace Synapse.Crypto.Patterns
 
             if (IsSlope)
             {
-                var offset = TimeSpan.FromMinutes(30).ToOADate();
+                var offset = TimeSpan.FromMinutes(5*(int)TimeFrame).ToOADate();
                 CoordinateLine line = new(mouseCoords, new Coordinates(mouseCoords.X + offset, mouseCoords.Y));
-                interactiveLine = new(line);
+                //trendLine = new(line);
+                trendLines.Add(new(line));
                 IsSlope = false;
                 Plot.Refresh();
             }
@@ -1012,19 +1043,19 @@ namespace Synapse.Crypto.Patterns
 
                         var segment = item as InteractiveLineSegment;
 
-                        if (interactiveLine.Segment.Equals(segment))
-                        {
+                        //if (interactiveLine.Segment.Equals(segment))
+                        //{
 
-                            if (evnt == "MouseMove")
-                            {
-                                interactiveLine.MouseMove(mouseCoords);
-                            }
-                            else if (evnt == "MouseLeftButtonDown")
-                            {
-                                interactiveLine.MouseLeftButtonDown(mouseCoords);
-                            }
+                        //    if (evnt == "MouseMove")
+                        //    {
+                        //        interactiveLine.MouseMove(mouseCoords);
+                        //    }
+                        //    else if (evnt == "MouseLeftButtonDown")
+                        //    {
+                        //        interactiveLine.MouseLeftButtonDown(mouseCoords);
+                        //    }
 
-                        }
+                        //}
 
                         //bool mouseover = segment.Line.IsMouseOver(mouseCoords);    
 
@@ -1076,9 +1107,9 @@ namespace Synapse.Crypto.Patterns
             return plt.GetCoordinates(pixel, plt.Axes.Bottom, yaxis);
         }
 
-        private Coordinates GetSnappedPoint(Coordinates mouseCoord)
+        public Coordinates? GetSnappedPoint(Coordinates mouseCoord)
         {
-            if (oHLCs == null || oHLCs.Count == 0) return mouseCoord;
+            if (oHLCs == null || oHLCs.Count == 0) return null;
 
             double mouseX = mouseCoord.X;
             double mouseY = mouseCoord.Y;
@@ -1111,8 +1142,7 @@ namespace Synapse.Crypto.Patterns
                 if (diff < minDiffX) { minDiffX = diff; closest = oHLCs[right]; }
             }
 
-            if (closest == null)
-                return mouseCoord;
+            if (closest == null) return null;
 
             double candleX = closest.Value.DateTime.ToOADate();
 
@@ -1120,7 +1150,8 @@ namespace Synapse.Crypto.Patterns
             return TrySnapToExtremum(closest.Value, candleX, mouseY);
         }
 
-        private Coordinates TrySnapToExtremum(OHLC candle, double candleX, double mouseY)
+        // возвращает координаты high или low свечи, если mouseY в пределах порога прилипания
+        private Coordinates? TrySnapToExtremum(OHLC candle, double candleX, double mouseY)
         {
             double high = candle.High;
             double low = candle.Low;
@@ -1128,7 +1159,6 @@ namespace Synapse.Crypto.Patterns
             double distToHigh = Math.Abs(high / mouseY - 1);
             double distToLow = Math.Abs(low / mouseY - 1);
 
-           // Фиксированный порог в единицах цены
             if (distToHigh <= SNAP_Y_THRESHOLD)
             {
                 return new Coordinates(candleX, high);
@@ -1139,9 +1169,8 @@ namespace Synapse.Crypto.Patterns
                 return new Coordinates(candleX, low);
             }
 
-            //Если ни high, ни low не попали в порог → возвращаем точные координаты мыши
-            //(X остаётся привязанным к свече, Y — где курсор)
-            return new Coordinates(candleX, mouseY);
+            //Если ни high, ни low не попали в порог → возвращаем null
+            return null;
         }
           
        // возвращает свечу, на которую указывает курсор мыши
