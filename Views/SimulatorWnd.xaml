@@ -90,9 +90,9 @@
                         </MenuItem.HeaderTemplate>
 
                         <MenuItem Header="Lines">
-                            <MenuItem Header="Slope by candles" Command="{Binding LinesCommand}" CommandParameter="slope_by_candles" IsCheckable="True" 
+                            <MenuItem Header="Horizontal line" Command="{Binding LinesCommand}" CommandParameter="horizontal" IsCheckable="True" 
                                   IsChecked="False" ToolTip="Нарисовать наклонную по двум свечам"/>
-                            <MenuItem Header="Slope" Command="{Binding LinesCommand}" CommandParameter="slope" IsCheckable="True" 
+                            <MenuItem Header="Trend line" Command="{Binding LinesCommand}" CommandParameter="slope" IsCheckable="True" 
                                   IsChecked="False" ToolTip="Нарисовать линию тренда" />
                         </MenuItem>
                         <MenuItem Header="Ranges">
