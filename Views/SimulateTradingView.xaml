@@ -4,10 +4,21 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:xb="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Synapse.Crypto.Patterns"
              mc:Ignorable="d" 
              d:DesignHeight="400" d:DesignWidth="300">
+
+    <xb:Interaction.Triggers>
+        <xb:EventTrigger EventName="Loaded">
+            <xb:CallMethodAction MethodName="OnLoaded" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+        <xb:EventTrigger EventName="Unloaded">
+            <xb:CallMethodAction MethodName="OnUnloaded" TargetObject="{Binding}"/>
+        </xb:EventTrigger>
+    </xb:Interaction.Triggers>
+
     <UserControl.Resources>
         
         <ObjectDataProvider x:Key="formations" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">

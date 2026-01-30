@@ -46,7 +46,6 @@ namespace Synapse.Crypto.Patterns
 
     public class SimulatorViewModel : BaseViewModel
     {
-       
 
         public const string NEXTBAR = "Следующий бар";
         public const string TS = "Тейк/стоп";
@@ -103,31 +102,30 @@ namespace Synapse.Crypto.Patterns
             security = item.Security;
 
             SetStartTimeCommand = new DelegateCommand(OnSetStartTime, CanSetStartTime);
-            NextCommand = new DelegateCommand(OnNext, CanNext);
+            //NextCommand = new DelegateCommand(OnNext, CanNext);
             RangeCommand = new DelegateCommand(OnRange, CanRange);
             LinesCommand = new DelegateCommand(OnLines, CanLines);
-            //PlotSlopeCommand = new DelegateCommand(OnPlotSlope, CanPlotSlope);
             DeleteElementCommand = new DelegateCommand(OnDeleteElement, CanDeleteElement);
-
             candles = root.Candles[item.Symbol];
-            GoToItems = [NEXTBAR, TS, RANGEBREAK, SLOPEBREAK];
+            GoToReasons = [NEXTBAR, TS, RANGEBREAK, SLOPEBREAK];
             SetStartTime();
-            Trading = new([.. candles], security);
             menu = (WpfPlotMenu)Plot.Menu;
-
             yaxis = yedge == Edge.Left ? plt.Axes.Left : plt.Axes.Right;
-
             Instance = this;
-
+            CandleViewModel = new ();
+            Navigation = new ();
+            Trading = new([.. candles], security);
         }
 
-        public static SimulatorViewModel Instance { get; private set; }
+        public static SimulatorViewModel? Instance { get; private set; }
 
          public WpfPlot Plot { get; }
 
-        public CandleViewModel CandleViewModel { private set; get; } = new CandleViewModel();
+        public CandleViewModel CandleViewModel { private set; get; }
 
         public SimulateTradingViewModel Trading { private set; get; }
+
+        public SimulatorNaviViewModel Navigation { private set; get; }
 
         /// <summary>
         /// Свеча под перекрестьем курсора
@@ -363,7 +361,7 @@ namespace Synapse.Crypto.Patterns
             }
         }
 
-        public List<string> GoToItems { private set; get; }
+        public List<string> GoToReasons { private set; get; }
 
         private string _goToItem = NEXTBAR;
         /// <summary>
@@ -449,78 +447,78 @@ namespace Synapse.Crypto.Patterns
         //    return true;
         //}
 
-        public DelegateCommand NextCommand { get; set; }
+        //public DelegateCommand NextCommand { get; set; }
 
-        private void OnNext(object arg)
-        {
-            int idx = 0;
+        //private void OnNext(object arg)
+        //{
+        //    int idx = 0;
 
-            switch (GoToItem)
-            {
-                case NEXTBAR: //Перемещение на n баров, заданных в Steps
+        //    switch (GoToItem)
+        //    {
+        //        case NEXTBAR: //Перемещение на n баров, заданных в Steps
 
-                    if (Trading?.Position?.State == PositionStates.Open)
-                    {
-                        idx = Trading.CheckForClose(CurrentCandle, Steps);
-                        CurrentCandle = candles[idx];
-                        Time = CurrentCandle.OpenTime;
-                    }
-                    else
-                    {
-                        Time += TimeSpan.FromMinutes((int)TimeFrame * Steps);
-                        CurrentCandle = candles.FirstOrDefault(c => c.OpenTime == Time);
-                    }
+        //            if (Trading?.Position?.State == PositionStates.Open)
+        //            {
+        //                idx = Trading.CheckForClose(CurrentCandle, Steps);
+        //                CurrentCandle = candles[idx];
+        //                Time = CurrentCandle.OpenTime;
+        //            }
+        //            else
+        //            {
+        //                Time += TimeSpan.FromMinutes((int)TimeFrame * Steps);
+        //                CurrentCandle = candles.FirstOrDefault(c => c.OpenTime == Time);
+        //            }
 
-                    break;
-                case TS: // Перемещение к месту тейка/стопа
+        //            break;
+        //        case TS: // Перемещение к месту тейка/стопа
 
-                    if (Trading?.Position?.State != PositionStates.Open) return;
+        //            if (Trading?.Position?.State != PositionStates.Open) return;
 
-                    idx = Trading.CheckForClose(CurrentCandle, -1);
-                    CurrentCandle = candles[idx];
-                    Time = CurrentCandle.OpenTime;
+        //            idx = Trading.CheckForClose(CurrentCandle, -1);
+        //            CurrentCandle = candles[idx];
+        //            Time = CurrentCandle.OpenTime;
 
-                    break;
-                case RANGEBREAK: // Перемещение к месту пробоя диапазона
-                    if (Trading?.Position?.State == PositionStates.Open) return;
+        //            break;
+        //        case RANGEBREAK: // Перемещение к месту пробоя диапазона
+        //            if (Trading?.Position?.State == PositionStates.Open) return;
 
-                    //TODO выполняется логика перемещения, функция перемещени должна вернуть индекс текущей свечи
-                    //idx = Trading.CheckForClose(CurrentCandle, -1);
-                    //CurrentCandle = candles[idx];
-                    //Time = CurrentCandle.OpenTime;
+        //            //TODO выполняется логика перемещения, функция перемещени должна вернуть индекс текущей свечи
+        //            //idx = Trading.CheckForClose(CurrentCandle, -1);
+        //            //CurrentCandle = candles[idx];
+        //            //Time = CurrentCandle.OpenTime;
 
-                    break;
-                case SLOPEBREAK: // Перемещение к месту пробоя наклонной
-                    if (Trading?.Position?.State == PositionStates.Open) return;
+        //            break;
+        //        case SLOPEBREAK: // Перемещение к месту пробоя наклонной
+        //            if (Trading?.Position?.State == PositionStates.Open) return;
 
-                    //TODO выполняется логика перемещения, функция перемещени должна вернуть индекс текущей свечи
-                    //idx = Trading.CheckForClose(CurrentCandle, -1);
-                    //CurrentCandle = candles[idx];
-                    //Time = CurrentCandle.OpenTime;
+        //            //TODO выполняется логика перемещения, функция перемещени должна вернуть индекс текущей свечи
+        //            //idx = Trading.CheckForClose(CurrentCandle, -1);
+        //            //CurrentCandle = candles[idx];
+        //            //Time = CurrentCandle.OpenTime;
 
-                    break;
-                default:
-                    break;
-            }
+        //            break;
+        //        default:
+        //            break;
+        //    }
 
-            if (Trading?.Position?.State == PositionStates.Close)
-                Trading.ClearPosition();
+        //    if (Trading?.Position?.State == PositionStates.Close)
+        //        Trading.ClearPosition();
 
-            Trading.CurrentCandle = CurrentCandle;
-            SetDisplayCandles();
-            Plotchart();
-            RangeInterval = RangeInterval;
+        //    Trading.CurrentCandle = CurrentCandle;
+        //    SetDisplayCandles();
+        //    Plotchart();
+        //    RangeInterval = RangeInterval;
 
-        }
+        //}
 
-        private bool CanNext(object arg)
-        {
-            var t = Time + TimeSpan.FromMinutes((int)TimeFrame * Steps);
-            var e = EndTime;
-            var r = (Time + TimeSpan.FromMinutes((int)TimeFrame * Steps)) <= EndTime;
+        //private bool CanNext(object arg)
+        //{
+        //    var t = Time + TimeSpan.FromMinutes((int)TimeFrame * Steps);
+        //    var e = EndTime;
+        //    var r = (Time + TimeSpan.FromMinutes((int)TimeFrame * Steps)) <= EndTime;
 
-            return (Time + TimeSpan.FromMinutes((int)TimeFrame * Steps)) <= EndTime;
-        }
+        //    return (Time + TimeSpan.FromMinutes((int)TimeFrame * Steps)) <= EndTime;
+        //}
 
         public DelegateCommand RangeCommand { get; set; }
 
@@ -1456,12 +1454,76 @@ namespace Synapse.Crypto.Patterns
             displaycandles = [.. candles.Where(c => c.OpenTime >= Time.AddDays(-WorkBackground) && c.OpenTime <= Time)];
         }
 
+        private void OnNaviAction(string action, int steps)
+        {
+            int idx = 0;
+
+            switch (action)
+            {
+                case NEXTBAR: //Перемещение на n баров, заданных в Steps
+
+                    if (Trading?.Position?.State == PositionStates.Open)
+                    {
+                        idx = Trading.CheckForClose(CurrentCandle, Steps);
+                        CurrentCandle = candles[idx];
+                        Time = CurrentCandle.OpenTime;
+                    }
+                    else
+                    {
+                        Time += TimeSpan.FromMinutes((int)TimeFrame * Steps);
+                        CurrentCandle = candles.FirstOrDefault(c => c.OpenTime == Time);
+                    }
+
+                    break;
+                case TS: // Перемещение к месту тейка/стопа
+
+                    if (Trading?.Position?.State != PositionStates.Open) return;
+
+                    idx = Trading.CheckForClose(CurrentCandle, -1);
+                    CurrentCandle = candles[idx];
+                    Time = CurrentCandle.OpenTime;
+
+                    break;
+                case RANGEBREAK: // Перемещение к месту пробоя диапазона
+                    if (Trading?.Position?.State == PositionStates.Open) return;
+
+                    //TODO выполняется логика перемещения, функция перемещени должна вернуть индекс текущей свечи
+                    //idx = Trading.CheckForClose(CurrentCandle, -1);
+                    //CurrentCandle = candles[idx];
+                    //Time = CurrentCandle.OpenTime;
+
+                    break;
+                case SLOPEBREAK: // Перемещение к месту пробоя наклонной
+                    if (Trading?.Position?.State == PositionStates.Open) return;
+
+                    //TODO выполняется логика перемещения, функция перемещени должна вернуть индекс текущей свечи
+                    //idx = Trading.CheckForClose(CurrentCandle, -1);
+                    //CurrentCandle = candles[idx];
+                    //Time = CurrentCandle.OpenTime;
+
+                    break;
+                default:
+                    break;
+            }
+
+            if (Trading?.Position?.State == PositionStates.Close)
+                Trading.ClearPosition();
+
+            Trading?.CurrentCandle = CurrentCandle;
+            SetDisplayCandles();
+            Plotchart();
+            RangeInterval = RangeInterval;
+        }
+
+
+
         public void OnLoaded(object sender, RoutedEventArgs e)
         {
             SetDisplayCandles();
             CurrentCandle = candles.FirstOrDefault(c => c.OpenTime == Time);
             Trading.CurrentCandle = CurrentCandle;
             Trading.ChangeTakeStop += OnChangeTakeStop;
+            Navigation.NaviAction += OnNaviAction;
 
             Plot.MouseRightButtonDown += Plot_MouseRightButtonDown;
             Plot.MouseRightButtonUp += Plot_MouseRightButtonUp;
@@ -1475,6 +1537,8 @@ namespace Synapse.Crypto.Patterns
 
             Plot.MouseMove += Plot_MouseMove;
             Plot.MouseDoubleClick += Plot_MouseDoubleClick;
+
+            
 
             plt.Grid.YAxis = yaxis;
 
@@ -1501,6 +1565,7 @@ namespace Synapse.Crypto.Patterns
             Plot.MouseUp -= Plot_MouseUp;
 
             Trading.ChangeTakeStop -= OnChangeTakeStop;
+            Navigation.NaviAction -= OnNaviAction;
         }
 
         public void OnClosing(object sender, CancelEventArgs e)

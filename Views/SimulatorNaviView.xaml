@@ -1,0 +1,55 @@
+﻿<UserControl x:Class="Synapse.Crypto.Patterns.SimulatorNaviView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:local="clr-namespace:Synapse.Crypto.Patterns"
+             mc:Ignorable="d" 
+             d:DesignHeight="32" d:DesignWidth="210">
+    <UserControl.Resources>
+
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+        <Grid x:Name="navigationGrid" Margin="2" >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+                
+        <Button Grid.Column="0" Command="{Binding NextCommand}" 
+                CommandParameter="{Binding ElementName=ReasonsBox, Path=SelectedItem}" 
+                ToolTip="Перемещение на N баров">
+            <Image Source="/Resources/free-icon-next-track-32.png"  Width="20" Height="20"/>
+        </Button> 
+                
+        <xctk:IntegerUpDown Grid.Column="1" Value="{Binding Steps}" Minimum="1" Margin="2" Width="42" ToolTip="Шаг (N)" />
+
+        <Button Grid.Column="2" Command="{Binding GoToReasonCommand}" 
+                CommandParameter="{Binding ElementName=ReasonsBox, Path=SelectedItem}" Margin="2" 
+                ToolTip="Перемещение к месту определенного события" >
+            <Image Source="/Resources/free-icon-fast-forward-32.png"  Width="20" Height="20"/>
+        </Button>
+                
+        <ComboBox Grid.Column="3" x:Name="ReasonsBox" ItemsSource="{Binding GoToReasons}" SelectedItem="{Binding GoToReason}"
+                          Width="150" Margin="2" ToolTip="Цель перемещения (событие)"/>
+                
+            </Grid>
+</UserControl>

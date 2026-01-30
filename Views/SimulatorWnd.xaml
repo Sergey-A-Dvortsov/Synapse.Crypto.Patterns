@@ -11,7 +11,7 @@
         xmlns:hc="https://handyorg.github.io/handycontrol"
         xmlns:local="clr-namespace:Synapse.Crypto.Patterns"
         mc:Ignorable="d"
-        Title="SimulatorWnd" Height="450" Width="800">
+        Title="SimulatorWnd" Height="600" Width="800">
 
     <xb:Interaction.Triggers>
         <xb:EventTrigger EventName="Loaded">
@@ -59,6 +59,14 @@
 
         <local:RangeIntervalBoolConverter x:Key="RangeIntervalBoolConv"/>
 
+        <Style x:Key="VerticalGridSplitter" TargetType="GridSplitter">
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Width" Value="5"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
+            <Setter Property="Background" Value="Gray"/>
+        </Style>
+
     </Window.Resources>
 
     <Grid>
@@ -67,6 +75,10 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
         <Grid x:Name="chartGrid" HorizontalAlignment="Stretch" Cursor="">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -127,7 +139,7 @@
             <sp:WpfPlot Grid.Row="2" Name="Plot"/>
 
         </Grid>
-        <GridSplitter Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Center" Width="5" Background="Gray"/>
+        <GridSplitter Grid.Column="1" Style="{StaticResource VerticalGridSplitter}"/>
         <Grid x:Name="infoGrid" Grid.Column="2" HorizontalAlignment="Stretch">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -217,7 +229,7 @@
                 </Grid>
             </GroupBox>-->
 
-            <GroupBox Header="Навигация" Grid.Row="4" Margin="2" BorderBrush="Gray" BorderThickness="2">
+            <!--<GroupBox Header="Навигация" Grid.Row="4" Margin="2" BorderBrush="Gray" BorderThickness="2">
                 <Grid x:Name="navigationGrid" Margin="2" >
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -233,9 +245,10 @@
                        HorizontalAlignment="Stretch" ToolTip="Цель перемещения"  />
                     <Button Grid.Row="1" Grid.ColumnSpan="2"  Content="Next" Command="{Binding NextCommand}" Margin="2" />
                 </Grid>
-            </GroupBox>
+            </GroupBox>-->
 
         </Grid>
+        <local:SimulatorNaviView Grid.Row="1" Grid.Column="0" DataContext="{Binding Navigation}" HorizontalAlignment="Center"/>
     </Grid>
 
 </Window>

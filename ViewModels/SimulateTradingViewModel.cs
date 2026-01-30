@@ -1,14 +1,15 @@
 ﻿using bybit.net.api.Models.Trade;
 using NLog;
-using Synapse.General;
 using Synapse.Crypto.Bybit;
 using Synapse.Crypto.Trading;
+using Synapse.General;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 
 namespace Synapse.Crypto.Patterns
@@ -50,6 +51,7 @@ namespace Synapse.Crypto.Patterns
         
         private Candle[] candles;
         private BybitSecurity security;
+        private SimulatorNaviViewModel? navigation;
 
         private Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -59,6 +61,7 @@ namespace Synapse.Crypto.Patterns
             this.security = security;
             ChangeSideCommand = new DelegateCommand(OnChangeSide, CanChangeSide);
             MakePositionCommand = new DelegateCommand(OnMakePosition, CanMakePosition);
+            navigation = SimulatorNaviViewModel.Instance;
         }
 
         public event Action<double, string> ChangeTakeStop = delegate { };
@@ -67,7 +70,6 @@ namespace Synapse.Crypto.Patterns
         {
             ChangeTakeStop?.Invoke(price, arg);
         }
-
 
         #region properties
 
@@ -454,6 +456,34 @@ namespace Synapse.Crypto.Patterns
         public void ClearPosition()
         {
             Position = null;
+        }
+
+        private void Navigation_NaviAction(string action, int bars)
+        {
+            switch (action)
+            {
+                case  SimulatorViewModel.NEXTBAR :
+                    break;
+                case SimulatorViewModel.TS :
+                    break;
+                case SimulatorViewModel.RANGEBREAK :
+                    break;
+                case SimulatorViewModel.SLOPEBREAK:
+                    break;
+                default:
+                    break;
+            }
+
+        }   
+
+        public void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            navigation?.NaviAction += Navigation_NaviAction;
+        }
+
+        public void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            navigation?.NaviAction -= Navigation_NaviAction;
         }
 
     }

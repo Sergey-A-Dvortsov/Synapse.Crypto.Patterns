@@ -8,12 +8,17 @@ using System.Threading.Tasks;
 
 namespace Synapse.Crypto.Patterns
 {
-        public class BaseViewModel : INotifyPropertyChanged
+        public class BaseViewModel : INotifyPropertyChanged, IDisposable    
         {
 
-            public event PropertyChangedEventHandler PropertyChanged;
+        public virtual void Dispose()
+        {
+            //throw new NotImplementedException();
+        }
 
-            public void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
