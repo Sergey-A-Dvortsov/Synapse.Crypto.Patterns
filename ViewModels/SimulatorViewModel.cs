@@ -80,27 +80,12 @@ namespace Synapse.Crypto.Patterns
         private HorizontalLine? takeLine; // верхняя линия диапазона
         private HorizontalLine? stopLine; // нижняя линия диапазона
 
-        private HorizontalLine draggedLine; // вспомогательные объект для отслеживания перетаскивания
         private double grabVrange = 0.01;   // зона захвата по вертикальной координате.
                                             // Захват возникает, если разность между вертикальными координатами курсора и объекта меньше 0.01%
 
-       
-        //private InteractiveLineSegment interactiveSegment;
-
-       // private InteractiveLine interactiveLine;
-
-        private InteractiveHorizontalLine interactiveHLine;
-
-        private TrendLine trendLine;
-
         private List<TrendLine> trendLines = [];
 
-        //WpfPlot1.Plot.Add.InteractiveHorizontalLineSegment(x1, x2, y);
-
-        //  private InteractiveHorizontalLineSegment takeLine
-
-        //CoordinateLine line = Generate.RandomLine();
-        //WpfPlot1.Plot.Add.InteractiveLineSegment(line);
+        private List<BaseHorizontalLine> horizontalLines = [];
 
         private SlopeLine? slope;
 
@@ -133,7 +118,6 @@ namespace Synapse.Crypto.Patterns
             yaxis = yedge == Edge.Left ? plt.Axes.Left : plt.Axes.Right;
 
             Instance = this;
-            // plt.Add.InteractiveHorizontalLine(4);
 
         }
 
@@ -180,7 +164,7 @@ namespace Synapse.Crypto.Patterns
 
         private bool _isSlope;
         /// <summary>
-        /// Включить/выключить перекрестье
+        ///Sets a flag to allow interactive addition of a trend line by left-clicking.
         /// </summary>
         public bool IsSlope
         {
@@ -191,6 +175,21 @@ namespace Synapse.Crypto.Patterns
                 NotifyPropertyChanged();
             }
         }
+
+        private bool _isHorizontal;
+        /// <summary>
+        /// Sets a flag to allow interactive addition of a horizontal line by left-clicking.
+        /// </summary>
+        public bool IsHorizontal
+        {
+            get => _isHorizontal;
+            set
+            {
+                _isHorizontal = value;
+                NotifyPropertyChanged();
+            }
+        }
+
 
         #region properties
 
@@ -606,21 +605,9 @@ namespace Synapse.Crypto.Patterns
                         IsSlope = true;
                         break;
                     }
-                case "slope_by_candles":
+                case "horizontal":
                     {
-                        if (slope == null)
-                        {
-                            slope = new(selectedCandles[^2].Candle, selectedCandles[^1].Candle);
-                            slope.SetMinMax(displaycandles);
-                            slope.Line = plt.Add.Line(slope.GetCoordinateLine().GetValueOrDefault());
-                            slope.Line.Axes.YAxis = yaxis;
-                        }
-                        else
-                        {
-                            plt.Remove(slope.Line);
-                            slope = null;
-                        }
-
+                        IsHorizontal = true;
                         break;
                     }
                 default:
@@ -633,47 +620,21 @@ namespace Synapse.Crypto.Patterns
 
         private bool CanLines(object arg)
         {
-            switch (arg.ToString())
-            {
-                case "slope":
-                    {
-                        break;
-                    }
-                case "slope_by_candles":
-                    {   var isSelected = selectedCandles?.Count > 1 || slope != null;
-                        return isSelected;
-                    }
-                default:
-                    break;
-            }
+            //switch (arg.ToString())
+            //{
+            //    case "slope":
+            //        {
+            //            break;
+            //        }
+            //    case "slope_by_candles":
+            //        {   var isSelected = selectedCandles?.Count > 1 || slope != null;
+            //            return isSelected;
+            //        }
+            //    default:
+            //        break;
+            //}
             return true;
         }
-
-        //public DelegateCommand PlotSlopeCommand { get; set; }
-
-        //private void OnPlotSlope(object arg)
-        //{
-        //    if (slope == null)
-        //    {
-        //        slope = new(selectedCandles[^2].Candle, selectedCandles[^1].Candle);
-        //        slope.SetMinMax(displaycandles);
-        //        slope.Line = plt.Add.Line(slope.GetCoordinateLine().GetValueOrDefault());
-        //        slope.Line.Axes.YAxis = yaxis;
-        //    }
-        //    else
-        //    {
-        //        plt.Remove(slope.Line);
-        //        slope = null;
-        //    }
-
-        //    Plot.Refresh();
-
-        //}
-
-        //private bool CanPlotSlope(object arg)
-        //{
-        //    return selectedCandles?.Count > 1 || slope != null;
-        //}
 
         public DelegateCommand DeleteElementCommand { get; set; }
 
@@ -690,12 +651,18 @@ namespace Synapse.Crypto.Patterns
                     line.Remove();
             }
 
+            foreach (var line in horizontalLines)
+            {
+                if (line.IsSelected)
+                    line.Remove();
+            }
+
             Plot.Refresh();
         }
 
         private bool CanDeleteElement(object arg)
         {
-            bool issel = trendLines.Any(l => l.IsSelected);
+            bool issel = trendLines.Any(l => l.IsSelected) || horizontalLines.Any(l => l.IsSelected);
             return issel;
         }
 
@@ -890,18 +857,28 @@ namespace Synapse.Crypto.Patterns
         {
             Coordinates mouseCoords = GetCoordinates(e);
 
-            //MouseEventProcessing("MouseMove", mouseCoords);
-
-            //if (trendLine != null)
-            //   trendLine.MouseMove(mouseCoords);
+            bool isRefresh = false;
 
             foreach(var line in trendLines)
             {
                 line.MouseMove(mouseCoords);
+                isRefresh = true;
+            }
+
+            foreach (var line in horizontalLines)
+            {
+                line.MouseMove(mouseCoords);
+                isRefresh = true;
             }
 
             if (CrosshairOn)
+            {
                 CrosshairMove(mouseCoords);
+                isRefresh = true;
+            }
+
+            if(isRefresh)
+                Plot.Refresh();
 
         }
 
@@ -935,6 +912,11 @@ namespace Synapse.Crypto.Patterns
                 line.MouseLeftButtonDown(mouseCoords);
             }
 
+            foreach (var line in horizontalLines)
+            {
+                line.MouseLeftButtonDown(mouseCoords);
+            }
+
             //MouseEventProcessing("MouseLeftButtonDown", mouseCoords);
 
 
@@ -959,6 +941,14 @@ namespace Synapse.Crypto.Patterns
                 //trendLine = new(line);
                 trendLines.Add(new(line));
                 IsSlope = false;
+                Plot.Refresh();
+            }
+
+            if (IsHorizontal)
+            {
+                BaseHorizontalLine line = new(mouseCoords.Y);
+                horizontalLines.Add(line);
+                IsHorizontal = false;
                 Plot.Refresh();
             }
 
@@ -1406,7 +1396,6 @@ namespace Synapse.Crypto.Patterns
 
             CrosshairCandle = candles.FirstOrDefault(c => c.OpenTime == tm);
             CandleViewModel.Candle = CrosshairCandle;
-            Plot.Refresh();
         }
 
         #endregion
@@ -1516,7 +1505,6 @@ namespace Synapse.Crypto.Patterns
 
         public void OnClosing(object sender, CancelEventArgs e)
         {
-
             //TODO
         }
 
